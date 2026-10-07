@@ -245,7 +245,7 @@ impl Balancer {
         let upstreams = addresses.into_iter()
             .map(|addr| Arc::new(UpstreamState {
                 addr,
-                healthy: AtomicBool::new(true),   // оптимистично стартуем
+                healthy: AtomicBool::new(true),
                 fail_streak: AtomicUsize::new(0),
                 active_conns: AtomicUsize::new(0),
             }))
@@ -257,7 +257,6 @@ impl Balancer {
     fn pick(&self, client_ip: IpAddr) -> Option<Arc<UpstreamState>> {
         if self.upstreams.is_empty() { return None; }
 
-        // Кандидаты — только живые. Клонируем Arc, чтобы не держать borrow на self.upstreams.
         let healthy: Vec<Arc<UpstreamState>> = self.upstreams.iter()
             .filter(|u| u.healthy.load(Ordering::Relaxed))
             .cloned()
@@ -270,12 +269,18 @@ impl Balancer {
                 Some(healthy[i % healthy.len()].clone())
             }
             Strategy::LeastConn => {
-                healthy.iter()
-                    .min_by_key(|u| u.active_conns.load(Ordering::Relaxed))
-                    .cloned()
+                // Тай-брейк по active_conns, при равенстве — round-robin.
+                let min_active = healthy.iter()
+                    .map(|u| u.active_conns.load(Ordering::Relaxed))
+                    .min()
+                    .unwrap_or(0);
+                let candidates: Vec<&Arc<UpstreamState>> = healthy.iter()
+                    .filter(|u| u.active_conns.load(Ordering::Relaxed) == min_active)
+                    .collect();
+                let i = self.rr.fetch_add(1, Ordering::Relaxed);
+                Some(candidates[i % candidates.len()].clone())
             }
             Strategy::IpHash => {
-                // Простой FNV-хэш по IP
                 let mut h: u64 = 1469598103934665603;
                 for b in client_ip.to_string().as_bytes() {
                     h ^= *b as u64;
