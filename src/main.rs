@@ -499,7 +499,7 @@ async fn main() -> io::Result<()> {
         balancers,
     });
 
-    println!("banditx v0.2.0 | http://{} | {} route(s)",
+    println!("banditx v0.3.1 | http://{} | {} route(s)",
              cfg.server.listen, cfg.routes.len());
 
     spawn_config_watcher(app.clone());
@@ -1753,7 +1753,7 @@ async fn serve_static<W: AsyncWriteExt + Unpin>(
 
     let (if_none_match, if_modified_since, range_header) = extract_conditional_headers(req_raw);
 
-    // 304 по If-None-Match
+    // 304
     if let Some(inm) = &if_none_match {
         if inm.trim() == etag || inm.trim() == "*" {
             let resp = format!(
@@ -1763,7 +1763,6 @@ async fn serve_static<W: AsyncWriteExt + Unpin>(
             return Ok((304, 0));
         }
     } else if let Some(ims) = &if_modified_since {
-        // 304 по If-Modified-Since (только если If-None-Match не задан)
         if let Some(t) = parse_http_date(ims) {
             if t >= mtime_secs {
                 let resp = format!(
@@ -1777,6 +1776,7 @@ async fn serve_static<W: AsyncWriteExt + Unpin>(
 
     let mime = mime_of(path);
 
+    // Range
     let (start, end, partial) = if let Some(rh) = range_header {
         match parse_range(&rh, file_len) {
             Some((s, e)) => (s, e, true),
@@ -1794,9 +1794,34 @@ async fn serve_static<W: AsyncWriteExt + Unpin>(
 
     let content_len: u64 = if file_len == 0 { 0 } else { end - start + 1 };
 
+    // ---- gzip: только если полная отдача, не HEAD, размер в окне, MIME текстовый ----
+    let want_gzip = !partial
+        && !is_head
+        && file_len as usize >= GZIP_MIN
+        && file_len as usize <= GZIP_MAX
+        && is_compressible(mime)
+        && client_accepts_gzip(req_raw);
+
+    if want_gzip {
+        let body = tokio::fs::read(path).await?;
+        let compressed = gzip_compress(&body)?;
+        // сжимаем только если реально меньше
+        if compressed.len() < body.len() {
+            let head = format!(
+                "HTTP/1.1 200 OK\r\nContent-Type: {mime}\r\nContent-Encoding: gzip\r\nContent-Length: {}\r\nETag: {etag}\r\nLast-Modified: {http_date}\r\nAccept-Ranges: bytes\r\nVary: Accept-Encoding\r\nConnection: keep-alive\r\n\r\n",
+                compressed.len()
+            );
+            cw.write_all(head.as_bytes()).await?;
+            cw.write_all(&compressed).await?;
+            return Ok((200, compressed.len() as u64));
+        }
+        // не сжалось — падаем в обычную отдачу ниже
+    }
+
+    // ---- обычная отдача ----
     let status_line = if partial { "206 Partial Content" } else { "200 OK" };
     let mut head = format!(
-        "HTTP/1.1 {status_line}\r\nContent-Type: {mime}\r\nContent-Length: {content_len}\r\nETag: {etag}\r\nLast-Modified: {http_date}\r\nAccept-Ranges: bytes\r\n"
+        "HTTP/1.1 {status_line}\r\nContent-Type: {mime}\r\nContent-Length: {content_len}\r\nETag: {etag}\r\nLast-Modified: {http_date}\r\nAccept-Ranges: bytes\r\nVary: Accept-Encoding\r\n"
     );
     if partial {
         head.push_str(&format!("Content-Range: bytes {start}-{end}/{file_len}\r\n"));
@@ -1840,7 +1865,7 @@ async fn serve_static_h2(
     let etag = format!("\"{:x}-{:x}\"", mtime_secs, file_len);
     let http_date = format_http_date(mtime);
 
-    // If-None-Match → 304
+    // 304
     if let Some(inm) = req.headers().get("if-none-match").and_then(|v| v.to_str().ok()) {
         if inm.trim() == etag || inm.trim() == "*" {
             let resp = Response::builder().status(304)
@@ -1857,12 +1882,52 @@ async fn serve_static_h2(
     let mime = mime_of(path);
     let is_head = method.eq_ignore_ascii_case("HEAD");
 
+    // gzip для h2
+    let h2_wants_gzip = !is_head
+        && (file_len as usize) >= GZIP_MIN
+        && (file_len as usize) <= GZIP_MAX
+        && is_compressible(mime)
+        && req.headers().get("accept-encoding")
+            .and_then(|v| v.to_str().ok())
+            .map(|v| {
+                let v = v.to_ascii_lowercase();
+                v.split(',').any(|t| {
+                    let t = t.trim();
+                    t == "gzip" || t.starts_with("gzip;")
+                })
+            })
+            .unwrap_or(false);
+
+    if h2_wants_gzip {
+        let body = tokio::fs::read(path).await?;
+        let compressed = gzip_compress(&body)?;
+        if compressed.len() < body.len() {
+            let resp = Response::builder().status(200)
+                .header("content-type", mime)
+                .header("content-encoding", "gzip")
+                .header("content-length", compressed.len())
+                .header("etag", etag)
+                .header("last-modified", http_date)
+                .header("accept-ranges", "bytes")
+                .header("vary", "accept-encoding")
+                .body(())
+                .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+            let mut send = respond.send_response(resp, false)
+                .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+            h2_send(&mut send, &compressed).await?;
+            send.send_data(Bytes::new(), true)
+                .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+            return Ok(());
+        }
+    }
+
     let resp = Response::builder().status(200)
         .header("content-type", mime)
         .header("content-length", file_len)
         .header("etag", etag)
         .header("last-modified", http_date)
         .header("accept-ranges", "bytes")
+        .header("vary", "accept-encoding")
         .body(())
         .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
 
@@ -1881,4 +1946,46 @@ async fn serve_static_h2(
     send.send_data(Bytes::new(), true)
         .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
     Ok(())
+}
+
+// ============================================================
+//  GZIP
+// ============================================================
+
+const GZIP_MIN: usize = 512;
+const GZIP_MAX: usize = 4 * 1024 * 1024;
+
+fn is_compressible(mime: &str) -> bool {
+    let m = mime.to_ascii_lowercase();
+    m.starts_with("text/")
+        || m.contains("json")
+        || m.contains("javascript")
+        || m.contains("xml")
+        || m.contains("svg")
+}
+
+fn client_accepts_gzip(raw_headers: &[u8]) -> bool {
+    let mut headers = [httparse::EMPTY_HEADER; 96];
+    let mut req = httparse::Request::new(&mut headers);
+    if req.parse(raw_headers).is_err() { return false; }
+    for h in req.headers.iter() {
+        if h.name.eq_ignore_ascii_case("accept-encoding") {
+            let v = String::from_utf8_lossy(h.value).to_ascii_lowercase();
+            return v.split(',').any(|tok| {
+                let t = tok.trim();
+                t == "gzip" || t.starts_with("gzip;")
+            });
+        }
+    }
+    false
+}
+
+fn gzip_compress(data: &[u8]) -> std::io::Result<Vec<u8>> {
+    use std::io::Write;
+    let mut enc = flate2::write::GzEncoder::new(
+        Vec::with_capacity(data.len() / 2),
+        flate2::Compression::new(6),
+    );
+    enc.write_all(data)?;
+    enc.finish()
 }
