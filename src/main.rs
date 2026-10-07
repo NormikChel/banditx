@@ -615,7 +615,7 @@ async fn main() -> io::Result<()> {
         balancers,
     });
 
-    println!("banditx v0.3.2 | http://{} | {} route(s)",
+    println!("banditx v0.3.3 | http://{} | {} route(s)",
              cfg.server.listen, cfg.routes.len());
 
     spawn_config_watcher(app.clone());
@@ -1217,9 +1217,23 @@ async fn handle_h2_stream_inner(
     };
 
     if route.kind == RouteKind::Fastcgi {
-        let body = b"fastcgi over h2 not implemented yet";
-        send_h2_body(&mut respond, 501, "text/plain", body).await?;
-        return Ok((501, body.len() as u64));
+        let balancer = match app.balancers.get(&route.prefix) {
+            Some(b) => b.clone(),
+            None => {
+                let body = b"no balancer";
+                send_h2_body(&mut respond, 502, "text/plain", body).await?;
+                return Ok((502, body.len() as u64));
+            }
+        };
+        let upstream = match balancer.pick(peer.ip()) {
+            Some(u) => u,
+            None => {
+                let body = b"all upstreams down";
+                send_h2_body(&mut respond, 503, "text/plain", body).await?;
+                return Ok((503, body.len() as u64));
+            }
+        };
+        return proxy_fastcgi_h2(req, respond, peer, &route, &upstream, &app).await;
     }
 
     // ---- статика по h2 ----
@@ -1345,6 +1359,193 @@ async fn handle_h2_stream_inner(
         .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
 
     Ok((resp.code, content_length.unwrap_or(0)))
+}
+
+async fn proxy_fastcgi_h2(
+    req: http::Request<h2::RecvStream>,
+    mut respond: h2::server::SendResponse<Bytes>,
+    peer: SocketAddr,
+    route: &RouteCfg,
+    upstream: &Arc<UpstreamState>,
+    app: &Arc<App>,
+) -> io::Result<(u16, u64)> {
+    let method = req.method().to_string();
+    let path = req.uri().path().to_string();
+    let query = req.uri().query().unwrap_or("").to_string();
+
+    // 1. Собираем заголовки ДО into_body (иначе req уедет)
+    let headers: Vec<(String, String)> = req.headers().iter()
+        .filter(|(n, _)| !n.as_str().starts_with(':'))
+        .map(|(n, v)| (n.as_str().to_string(), v.to_str().unwrap_or("").to_string()))
+        .collect();
+    let authority = req.uri().authority().map(|a| a.as_str().to_string());
+
+    // 2. Читаем тело (для FastCGI нужен CONTENT_LENGTH)
+    let mut body = Vec::new();
+    let mut stream = req.into_body();
+    while let Some(chunk) = stream.data().await {
+        let chunk = chunk.map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+        if body.len() + chunk.len() > MAX_FCGI_BODY {
+            let msg = b"body too large";
+            send_h2_body(&mut respond, 413, "text/plain", msg).await?;
+            return Ok((413, msg.len() as u64));
+        }
+        body.extend_from_slice(&chunk);
+    }
+
+    // 3. Пул FastCGI
+    let pool = app.pools.fcgi(&upstream.addr);
+    let mut up = match pool.get(&app.metrics).await {
+        Ok(s) => s,
+        Err(e) => {
+            app.metrics.upstream_errors.fetch_add(1, Ordering::Relaxed);
+            eprintln!("[fcgi pool h2] {e}");
+            let msg = b"fastcgi upstream unavailable";
+            send_h2_body(&mut respond, 502, "text/plain", msg).await?;
+            return Ok((502, msg.len() as u64));
+        }
+    };
+
+    // 4. PARAMS
+    let doc_root = route.doc_root.as_deref().unwrap_or("/");
+    let script_filename = format!("{}{}", doc_root.trim_end_matches('/'), path);
+
+    let mut params = Vec::new();
+    let add = |k: &str, v: &str, out: &mut Vec<u8>| fcgi_encode_nv(out, k.as_bytes(), v.as_bytes());
+
+    add("GATEWAY_INTERFACE", "CGI/1.1", &mut params);
+    add("SERVER_SOFTWARE", "banditx/0.3.3", &mut params);
+    add("SERVER_PROTOCOL", "HTTP/2", &mut params);
+    add("REQUEST_METHOD", &method, &mut params);
+    let uri = if query.is_empty() { path.clone() } else { format!("{}?{}", path, query) };
+    add("REQUEST_URI", &uri, &mut params);
+    add("QUERY_STRING", &query, &mut params);
+    add("SCRIPT_NAME", &path, &mut params);
+    add("SCRIPT_FILENAME", &script_filename, &mut params);
+    add("DOCUMENT_ROOT", doc_root, &mut params);
+    add("REMOTE_ADDR", &peer.ip().to_string(), &mut params);
+    add("REMOTE_PORT", &peer.port().to_string(), &mut params);
+    add("SERVER_ADDR", "127.0.0.1", &mut params);
+    add("SERVER_PORT", "8443", &mut params);
+    add("CONTENT_LENGTH", &body.len().to_string(), &mut params);
+
+    if let Some(auth) = &authority {
+        add("HTTP_HOST", auth, &mut params);
+        add("SERVER_NAME", auth.split(':').next().unwrap_or(auth), &mut params);
+    }
+
+    for (n, v) in &headers {
+        let key = n.to_ascii_uppercase().replace('-', "_");
+        if key == "CONTENT_TYPE" {
+            add("CONTENT_TYPE", v, &mut params);
+        } else if key != "CONTENT_LENGTH" && key != "HOST" {
+            add(&format!("HTTP_{key}"), v, &mut params);
+        }
+    }
+
+    // 5. BEGIN_REQUEST + PARAMS + STDIN
+    let req_id: u16 = 1;
+    let mut begin = Vec::with_capacity(8);
+    begin.extend_from_slice(&FCGI_RESPONDER.to_be_bytes());
+    begin.push(0);
+    begin.extend_from_slice(&[0u8; 5]);
+
+    let mut out = Vec::new();
+    fcgi_write_record(&mut out, req_id, FCGI_BEGIN_REQUEST, &begin);
+    up.write_all(&out).await?;
+
+    for chunk in params.chunks(65535) {
+        let mut b = Vec::new();
+        fcgi_write_record(&mut b, req_id, FCGI_PARAMS, chunk);
+        up.write_all(&b).await?;
+    }
+    let mut b = Vec::new();
+    fcgi_write_record(&mut b, req_id, FCGI_PARAMS, &[]);
+    up.write_all(&b).await?;
+
+    for chunk in body.chunks(65535) {
+        let mut b = Vec::new();
+        fcgi_write_record(&mut b, req_id, FCGI_STDIN, chunk);
+        up.write_all(&b).await?;
+    }
+    let mut b = Vec::new();
+    fcgi_write_record(&mut b, req_id, FCGI_STDIN, &[]);
+    up.write_all(&b).await?;
+    up.flush().await.ok();
+
+    // 6. Читаем ответ
+    let mut stdout = Vec::new();
+    let mut pool_ok = true;
+    let read_result: io::Result<()> = async {
+        loop {
+            let rec = match timeout(BODY_TIMEOUT, fcgi_read_record(&mut up)).await {
+                Ok(Ok(x)) => x,
+                Ok(Err(e)) => return Err(e),
+                Err(_) => return Err(io::Error::new(io::ErrorKind::TimedOut, "fcgi timeout")),
+            };
+            let Some((ty, _id, content)) = rec else { return Ok(()); };
+            match ty {
+                FCGI_STDOUT => stdout.extend_from_slice(&content),
+                FCGI_STDERR => {
+                    if !content.is_empty() {
+                        eprintln!("[fcgi stderr h2] {}", String::from_utf8_lossy(&content));
+                    }
+                }
+                FCGI_END_REQUEST => return Ok(()),
+                _ => {}
+            }
+        }
+    }.await;
+
+    if let Err(e) = read_result {
+        eprintln!("[fcgi read h2] {e}");
+        pool_ok = false;
+    }
+    if pool_ok { pool.put(up); }
+
+    // 7. CGI → h2
+    let (cgi_headers, cgi_body) = split_cgi_response(&stdout);
+    let mut status_code: u16 = 200;
+    let mut h2_headers: Vec<(String, String)> = Vec::new();
+
+    for (n, v) in cgi_headers {
+        if n.eq_ignore_ascii_case("status") {
+            if let Some(c) = v.split_whitespace().next().and_then(|s| s.parse::<u16>().ok()) {
+                status_code = c;
+            }
+            continue;
+        }
+        if n.eq_ignore_ascii_case("content-length") { continue; }
+        if is_hop_by_hop(&n) { continue; }
+        h2_headers.push((n, v));
+    }
+
+    let mut h2_resp = Response::builder().status(status_code).body(())
+        .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+    {
+        let hdrs = h2_resp.headers_mut();
+        for (n, v) in &h2_headers {
+            if let (Ok(name), Ok(val)) = (
+                http::header::HeaderName::from_bytes(n.as_bytes()),
+                HeaderValue::from_str(v),
+            ) { hdrs.append(name, val); }
+        }
+        hdrs.insert(
+            http::header::CONTENT_LENGTH,
+            HeaderValue::from(cgi_body.len()),
+        );
+    }
+
+    let end_stream = cgi_body.is_empty();
+    let mut send = respond.send_response(h2_resp, end_stream)
+        .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+    if !end_stream {
+        h2_send(&mut send, &cgi_body).await?;
+        send.send_data(Bytes::new(), true)
+            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+    }
+
+    Ok((status_code, cgi_body.len() as u64))
 }
 
 async fn send_h2_body(
