@@ -1,27 +1,28 @@
-//! banditx v0.2.0 — балансировка + health checks
+//! banditx v0.3.2 — static + gzip + JSON access log + async-очередь логов
 //!
-//! Изменения от v0.1.0:
-//!  - RouteCfg.upstream → upstreams (Vec<String>)
-//!  - Добавлен strategy: round_robin | least_conn | ip_hash
-//!  - Balancer per-route, выбирает живой адрес
-//!  - Health checks: TCP-проба, выкидывание мёртвых
-//!  - X-Forwarded-Host: пробрасываем оригинальный Host клиента
+//! Изменения от v0.2.0:
+//!  - Статика: ETag, Last-Modified, Range, 304, safe_join
+//!  - gzip на лету для text/*, JSON, JS, XML, SVG
+//!  - Access log через mpsc-очередь, не блокирует request-путь
+//!  - Форматы: combined (nginx) и json
+//!  - h2-запросы теперь тоже логируются
+//!  - duration_ms в логах
 
 use std::collections::HashMap;
-use std::io::{self, Write};
+use std::io;
 use std::net::{IpAddr, SocketAddr};
 use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use arc_swap::ArcSwap;
 use bytes::Bytes;
 use h2::server as h2_server;
 use http::{HeaderValue, Response};
 use serde::Deserialize;
-use tokio::io::{AsyncBufReadExt, AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt, BufReader};
+use tokio::io::{AsyncBufReadExt, AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt, BufReader, BufWriter};
 use tokio::net::{TcpListener, TcpStream};
-use tokio::sync::Notify;
+use tokio::sync::{mpsc, Notify};
 use tokio::time::timeout;
 use tokio_rustls::TlsAcceptor;
 
@@ -38,6 +39,8 @@ const FCGI_IDLE_MAX: usize = 64;
 const HEALTH_INTERVAL: Duration = Duration::from_secs(3);
 const HEALTH_TIMEOUT: Duration = Duration::from_secs(1);
 const HEALTH_FAIL_THRESHOLD: u32 = 2;
+const GZIP_MIN: usize = 512;
+const GZIP_MAX: usize = 4 * 1024 * 1024;
 
 const FCGI_VERSION_1: u8 = 1;
 const FCGI_BEGIN_REQUEST: u8 = 1;
@@ -62,7 +65,25 @@ struct Config {
 struct ServerCfg {
     listen: String,
     #[serde(default)] tls_listen: Option<String>,
-    #[serde(default)] access_log: Option<String>,
+    #[serde(default)] access_log: Option<AccessLogCfg>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(untagged)]
+enum AccessLogCfg {
+    Path(String),
+    Full {
+        #[serde(default)] path: Option<String>,
+        #[serde(default)] format: LogFormat,
+    },
+}
+
+#[derive(Debug, Clone, Copy, Deserialize, Default)]
+#[serde(rename_all = "lowercase")]
+enum LogFormat {
+    #[default]
+    Combined,
+    Json,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -174,7 +195,6 @@ impl Metrics {
             self.active_conns.load(Ordering::Relaxed)
         ));
 
-        // Per-route, per-upstream health gauge
         s.push_str("# HELP banditx_upstream_healthy Upstream health (1=up, 0=down)\n# TYPE banditx_upstream_healthy gauge\n");
         for route in routes {
             if let Some(b) = balancers.get(&route.prefix) {
@@ -194,34 +214,132 @@ impl Metrics {
 //  ACCESS LOG
 // ============================================================
 
+struct LogEntry {
+    peer: SocketAddr,
+    method: String,
+    target: String,
+    version: String,
+    status: u16,
+    bytes: u64,
+    ua: String,
+    duration_ms: u64,
+}
+
 struct AccessLog {
-    file: Option<Mutex<std::fs::File>>,
+    tx: Option<mpsc::Sender<LogEntry>>,
+    dropped: Arc<AtomicU64>,
 }
 
 impl AccessLog {
-    fn new(path: Option<&str>) -> io::Result<Self> {
-        let file = match path {
-            Some(p) => Some(Mutex::new(
-                std::fs::OpenOptions::new().create(true).append(true).open(p)?,
-            )),
-            None => None,
+    fn start(cfg: Option<&AccessLogCfg>) -> Self {
+        let Some(cfg) = cfg else {
+            return Self { tx: None, dropped: Arc::new(AtomicU64::new(0)) };
         };
-        Ok(Self { file })
+        let (path, format) = match cfg {
+            AccessLogCfg::Path(p) => (Some(p.clone()), LogFormat::Combined),
+            AccessLogCfg::Full { path, format } => (path.clone(), *format),
+        };
+
+        let (tx, mut rx) = mpsc::channel::<LogEntry>(4096);
+        let dropped = Arc::new(AtomicU64::new(0));
+
+        tokio::spawn(async move {
+            let mut file = match &path {
+                Some(p) => match tokio::fs::OpenOptions::new()
+                    .create(true).append(true).open(p).await
+                {
+                    Ok(f) => Some(BufWriter::new(f)),
+                    Err(e) => { eprintln!("access_log open {p}: {e}"); None }
+                },
+                None => None,
+            };
+            let mut stdout = tokio::io::stdout();
+
+            while let Some(entry) = rx.recv().await {
+                let line = match format {
+                    LogFormat::Combined => format_combined(&entry),
+                    LogFormat::Json => format_json(&entry),
+                };
+                let r = if let Some(f) = file.as_mut() {
+                    f.write_all(line.as_bytes()).await
+                } else {
+                    stdout.write_all(line.as_bytes()).await
+                };
+                if let Err(e) = r {
+                    eprintln!("access_log write: {e}");
+                }
+            }
+        });
+
+        Self { tx: Some(tx), dropped }
     }
 
     fn log(&self, peer: SocketAddr, method: &str, target: &str, version: &str,
-           status: u16, bytes: u64, user_agent: &str) {
-        let ts = chrono::Local::now().format("%d/%b/%Y:%H:%M:%S %z");
-        let line = format!(
-            "{ip} - - [{ts}] \"{method} {target} {version}\" {status} {bytes} \"-\" \"{ua}\"\n",
-            ip = peer.ip(), ts = ts, method = method, target = target,
-            version = version, status = status, bytes = bytes, ua = user_agent,
-        );
-        match &self.file {
-            Some(f) => { if let Ok(mut f) = f.lock() { let _ = f.write_all(line.as_bytes()); } }
-            None => { print!("{line}"); }
+           status: u16, bytes: u64, ua: &str, duration_ms: u64) {
+        let Some(tx) = &self.tx else { return; };
+        let entry = LogEntry {
+            peer,
+            method: method.to_string(),
+            target: target.to_string(),
+            version: version.to_string(),
+            status, bytes,
+            ua: ua.to_string(),
+            duration_ms,
+        };
+        if tx.try_send(entry).is_err() {
+            let n = self.dropped.fetch_add(1, Ordering::Relaxed) + 1;
+            if n == 1 || n % 1000 == 0 {
+                eprintln!("access_log: dropped {n} entries (queue full)");
+            }
         }
     }
+}
+
+fn format_combined(e: &LogEntry) -> String {
+    let ts = chrono::Local::now().format("%d/%b/%Y:%H:%M:%S %z");
+    format!(
+        "{ip} - - [{ts}] \"{method} {target} {version}\" {status} {bytes} \"-\" \"{ua}\"\n",
+        ip = e.peer.ip(),
+        ts = ts,
+        method = e.method,
+        target = e.target,
+        version = e.version,
+        status = e.status,
+        bytes = e.bytes,
+        ua = e.ua,
+    )
+}
+
+fn format_json(e: &LogEntry) -> String {
+    let ts = chrono::Local::now().to_rfc3339();
+    format!(
+        "{{\"time\":\"{ts}\",\"remote_addr\":\"{ip}\",\"method\":\"{m}\",\"uri\":\"{u}\",\"proto\":\"{p}\",\"status\":{s},\"bytes\":{b},\"ua\":\"{ua}\",\"duration_ms\":{d}}}\n",
+        ts = ts,
+        ip = e.peer.ip(),
+        m = json_escape(&e.method),
+        u = json_escape(&e.target),
+        p = json_escape(&e.version),
+        s = e.status,
+        b = e.bytes,
+        ua = json_escape(&e.ua),
+        d = e.duration_ms,
+    )
+}
+
+fn json_escape(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    for c in s.chars() {
+        match c {
+            '"' => out.push_str("\\\""),
+            '\\' => out.push_str("\\\\"),
+            '\n' => out.push_str("\\n"),
+            '\r' => out.push_str("\\r"),
+            '\t' => out.push_str("\\t"),
+            c if (c as u32) < 0x20 => out.push_str(&format!("\\u{:04x}", c as u32)),
+            c => out.push(c),
+        }
+    }
+    out
 }
 
 // ============================================================
@@ -254,7 +372,6 @@ impl Balancer {
         Self { strategy, upstreams, rr: AtomicUsize::new(0) }
     }
 
-    /// Выбрать живой upstream. Возвращает None, если все мертвы.
     fn pick(&self, client_ip: IpAddr) -> Option<Arc<UpstreamState>> {
         if self.upstreams.is_empty() { return None; }
 
@@ -270,7 +387,6 @@ impl Balancer {
                 Some(healthy[i % healthy.len()].clone())
             }
             Strategy::LeastConn => {
-                // Тай-брейк по active_conns, при равенстве — round-robin.
                 let min_active = healthy.iter()
                     .map(|u| u.active_conns.load(Ordering::Relaxed))
                     .min()
@@ -494,12 +610,12 @@ async fn main() -> io::Result<()> {
         cfg: ArcSwap::from_pointee(cfg.clone()),
         metrics: Arc::new(Metrics::new()),
         pools: Arc::new(PoolRegistry::new()),
-        access_log: Arc::new(AccessLog::new(cfg.server.access_log.as_deref())?),
+        access_log: Arc::new(AccessLog::start(cfg.server.access_log.as_ref())),
         cfg_path: cfg_path.clone(),
         balancers,
     });
 
-    println!("banditx v0.3.1 | http://{} | {} route(s)",
+    println!("banditx v0.3.2 | http://{} | {} route(s)",
              cfg.server.listen, cfg.routes.len());
 
     spawn_config_watcher(app.clone());
@@ -638,6 +754,8 @@ where S: AsyncRead + AsyncWrite + Unpin + Send + 'static {
             }
         };
 
+        let started = Instant::now();
+
         if parsed.path == "/_banditx/metrics" {
             let body = app.metrics.render(&cfg.routes, &app.balancers);
             let out = format!(
@@ -658,7 +776,6 @@ where S: AsyncRead + AsyncWrite + Unpin + Send + 'static {
 
         // ---- статика ----
         if let Some(static_root) = &route.static_root {
-            // отрезаем prefix маршрута: /static/hello.txt + prefix=/static/ → /hello.txt
             let rel = parsed.path
                 .strip_prefix(route.prefix.trim_end_matches('/'))
                 .unwrap_or(&parsed.path);
@@ -670,7 +787,11 @@ where S: AsyncRead + AsyncWrite + Unpin + Send + 'static {
                             app.metrics.record_status(status);
                             let ua = parsed.headers_ua_from_raw(&req_raw);
                             let version = format!("HTTP/1.{}", parsed.version_minor);
-                            app.access_log.log(peer, &parsed.method, &parsed.full_target(), &version, status, bytes, &ua);
+                            app.access_log.log(
+                                peer, &parsed.method, &parsed.full_target(), &version,
+                                status, bytes, &ua,
+                                started.elapsed().as_millis() as u64,
+                            );
                             if parsed.connection_close { return Ok(()); }
                             continue;
                         }
@@ -682,9 +803,15 @@ where S: AsyncRead + AsyncWrite + Unpin + Send + 'static {
                     }
                 }
                 _ => {
-                    // статический маршрут — терминальный, файла нет → 404
                     cw.write_all(b"HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: keep-alive\r\n\r\n").await.ok();
                     app.metrics.record_status(404);
+                    let ua = parsed.headers_ua_from_raw(&req_raw);
+                    let version = format!("HTTP/1.{}", parsed.version_minor);
+                    app.access_log.log(
+                        peer, &parsed.method, &parsed.full_target(), &version,
+                        404, 0, &ua,
+                        started.elapsed().as_millis() as u64,
+                    );
                     if parsed.connection_close { return Ok(()); }
                     continue;
                 }
@@ -730,7 +857,11 @@ where S: AsyncRead + AsyncWrite + Unpin + Send + 'static {
 
         let ua = parsed.headers_ua_from_raw(&req_raw);
         let version = format!("HTTP/1.{}", parsed.version_minor);
-        app.access_log.log(peer, &parsed.method, &parsed.full_target(), &version, status, bytes_out, &ua);
+        app.access_log.log(
+            peer, &parsed.method, &parsed.full_target(), &version,
+            status, bytes_out, &ua,
+            started.elapsed().as_millis() as u64,
+        );
 
         if !keep || parsed.connection_close { return Ok(()); }
     }
@@ -816,7 +947,7 @@ where R: AsyncBufReadExt + Unpin, W: AsyncWriteExt + Unpin {
     let add = |k: &str, v: &str, out: &mut Vec<u8>| fcgi_encode_nv(out, k.as_bytes(), v.as_bytes());
 
     add("GATEWAY_INTERFACE", "CGI/1.1", &mut params);
-    add("SERVER_SOFTWARE", "banditx/0.2.0", &mut params);
+    add("SERVER_SOFTWARE", "banditx/0.3.2", &mut params);
     add("SERVER_PROTOCOL", "HTTP/1.1", &mut params);
     add("REQUEST_METHOD", &parsed.method, &mut params);
     let uri = if parsed.query.is_empty() { parsed.path.clone() }
@@ -1025,10 +1156,44 @@ where S: AsyncRead + AsyncWrite + Unpin + Send + 'static {
 
 async fn handle_h2_stream(
     req: http::Request<h2::RecvStream>,
-    mut respond: h2::server::SendResponse<Bytes>,
+    respond: h2::server::SendResponse<Bytes>,
     peer: SocketAddr,
     app: Arc<App>,
 ) -> io::Result<()> {
+    let started = Instant::now();
+
+    let ua = req.headers()
+        .get("user-agent")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("")
+        .to_string();
+    let method = req.method().to_string();
+    let path = req.uri().path().to_string();
+    let query = req.uri().query().unwrap_or("").to_string();
+    let target = if query.is_empty() { path.clone() } else { format!("{path}?{query}") };
+
+    let result = handle_h2_stream_inner(req, respond, peer, app.clone()).await;
+
+    let (status, bytes) = match &result {
+        Ok((s, b)) => (*s, *b),
+        Err(_) => (500u16, 0u64),
+    };
+    app.metrics.record_status(status);
+    app.access_log.log(
+        peer, &method, &target, "HTTP/2",
+        status, bytes, &ua,
+        started.elapsed().as_millis() as u64,
+    );
+
+    result.map(|_| ())
+}
+
+async fn handle_h2_stream_inner(
+    req: http::Request<h2::RecvStream>,
+    mut respond: h2::server::SendResponse<Bytes>,
+    peer: SocketAddr,
+    app: Arc<App>,
+) -> io::Result<(u16, u64)> {
     let cfg = app.cfg.load_full();
     let method = req.method().to_string();
     let path = req.uri().path().to_string();
@@ -1037,16 +1202,24 @@ async fn handle_h2_stream(
 
     if path == "/_banditx/metrics" {
         let body = app.metrics.render(&cfg.routes, &app.balancers).into_bytes();
-        return send_h2_body(&mut respond, 200, "text/plain; version=0.0.4", &body).await;
+        let n = body.len() as u64;
+        send_h2_body(&mut respond, 200, "text/plain; version=0.0.4", &body).await?;
+        return Ok((200, n));
     }
 
     let route = match cfg.pick(&path) {
         Some(r) => r.clone(),
-        None => return send_h2_body(&mut respond, 404, "text/plain", b"not found").await,
+        None => {
+            let body = b"not found";
+            send_h2_body(&mut respond, 404, "text/plain", body).await?;
+            return Ok((404, body.len() as u64));
+        }
     };
 
     if route.kind == RouteKind::Fastcgi {
-        return send_h2_body(&mut respond, 501, "text/plain", b"fastcgi over h2 not implemented yet").await;
+        let body = b"fastcgi over h2 not implemented yet";
+        send_h2_body(&mut respond, 501, "text/plain", body).await?;
+        return Ok((501, body.len() as u64));
     }
 
     // ---- статика по h2 ----
@@ -1057,28 +1230,43 @@ async fn handle_h2_stream(
         let rel = if rel.is_empty() { "/" } else { rel };
         match safe_join(static_root, rel) {
             Some(file_path) if file_path.is_file() => {
-                return serve_static_h2(&mut respond, &file_path, &method, &req).await;
+                let meta = tokio::fs::metadata(&file_path).await?;
+                let file_len = meta.len();
+                serve_static_h2(&mut respond, &file_path, &method, &req).await?;
+                return Ok((200, file_len));
             }
             _ => {
-                return send_h2_body(&mut respond, 404, "text/plain", b"not found").await;
+                let body = b"not found";
+                send_h2_body(&mut respond, 404, "text/plain", body).await?;
+                return Ok((404, body.len() as u64));
             }
         }
     }
 
     let balancer = match app.balancers.get(&route.prefix) {
         Some(b) => b.clone(),
-        None => return send_h2_body(&mut respond, 502, "text/plain", b"no balancer").await,
+        None => {
+            let body = b"no balancer";
+            send_h2_body(&mut respond, 502, "text/plain", body).await?;
+            return Ok((502, body.len() as u64));
+        }
     };
     let upstream = match balancer.pick(peer.ip()) {
         Some(u) => u,
-        None => return send_h2_body(&mut respond, 503, "text/plain", b"all upstreams down").await,
+        None => {
+            let body = b"all upstreams down";
+            send_h2_body(&mut respond, 503, "text/plain", body).await?;
+            return Ok((503, body.len() as u64));
+        }
     };
 
     let up = match timeout(CONNECT_TIMEOUT, TcpStream::connect(&upstream.addr)).await {
         Ok(Ok(s)) => s,
         _ => {
             balancer.mark_fail(&upstream.addr, &app.metrics);
-            return send_h2_body(&mut respond, 502, "text/plain", b"upstream down").await;
+            let body = b"upstream down";
+            send_h2_body(&mut respond, 502, "text/plain", body).await?;
+            return Ok((502, body.len() as u64));
         }
     };
     up.set_nodelay(true).ok();
@@ -1121,15 +1309,24 @@ async fn handle_h2_stream(
 
     let resp_raw = match read_header_block(&mut ur).await? {
         Some(b) => b,
-        None => { balancer.mark_fail(&upstream.addr, &app.metrics); return send_h2_body(&mut respond, 502, "text/plain", b"no response").await; }
+        None => {
+            balancer.mark_fail(&upstream.addr, &app.metrics);
+            let body = b"no response";
+            send_h2_body(&mut respond, 502, "text/plain", body).await?;
+            return Ok((502, body.len() as u64));
+        }
     };
     let resp = parse_response(&resp_raw).map_err(|_| io::Error::new(io::ErrorKind::InvalidData, "bad resp"))?;
     let framing = response_framing(&resp, &method);
 
     balancer.mark_ok(&upstream.addr);
-    app.metrics.record_status(resp.code);
 
-    let mut h2_resp = Response::builder().status(resp.code).body(()).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+    let content_length: Option<u64> = resp.headers.iter()
+        .find(|(n, _)| n.eq_ignore_ascii_case("content-length"))
+        .and_then(|(_, v)| v.parse().ok());
+
+    let mut h2_resp = Response::builder().status(resp.code).body(())
+        .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
     {
         let hdrs = h2_resp.headers_mut();
         for (n, v) in &resp.headers {
@@ -1141,10 +1338,13 @@ async fn handle_h2_stream(
             ) { hdrs.append(name, val); }
         }
     }
-    let mut send = respond.send_response(h2_resp, false).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+    let mut send = respond.send_response(h2_resp, false)
+        .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
     stream_h1_body_to_h2(&mut ur, &mut send, framing).await?;
-    send.send_data(Bytes::new(), true).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
-    Ok(())
+    send.send_data(Bytes::new(), true)
+        .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+
+    Ok((resp.code, content_length.unwrap_or(0)))
 }
 
 async fn send_h2_body(
@@ -1156,9 +1356,11 @@ async fn send_h2_body(
         .header("content-type", content_type)
         .header("content-length", body.len())
         .body(()).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
-    let mut send = respond.send_response(resp, body.is_empty()).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+    let mut send = respond.send_response(resp, body.is_empty())
+        .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
     if !body.is_empty() {
-        send.send_data(Bytes::copy_from_slice(body), true).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+        send.send_data(Bytes::copy_from_slice(body), true)
+            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
     }
     Ok(())
 }
@@ -1226,7 +1428,8 @@ async fn h2_send(send: &mut h2::SendStream<Bytes>, data: &[u8]) -> io::Result<()
         };
         if cap == 0 { continue; }
         let n = data.len().min(cap);
-        send.send_data(Bytes::copy_from_slice(&data[..n]), false).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+        send.send_data(Bytes::copy_from_slice(&data[..n]), false)
+            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
         data = &data[n..];
     }
     Ok(())
@@ -1753,7 +1956,6 @@ async fn serve_static<W: AsyncWriteExt + Unpin>(
 
     let (if_none_match, if_modified_since, range_header) = extract_conditional_headers(req_raw);
 
-    // 304
     if let Some(inm) = &if_none_match {
         if inm.trim() == etag || inm.trim() == "*" {
             let resp = format!(
@@ -1776,7 +1978,6 @@ async fn serve_static<W: AsyncWriteExt + Unpin>(
 
     let mime = mime_of(path);
 
-    // Range
     let (start, end, partial) = if let Some(rh) = range_header {
         match parse_range(&rh, file_len) {
             Some((s, e)) => (s, e, true),
@@ -1794,7 +1995,6 @@ async fn serve_static<W: AsyncWriteExt + Unpin>(
 
     let content_len: u64 = if file_len == 0 { 0 } else { end - start + 1 };
 
-    // ---- gzip: только если полная отдача, не HEAD, размер в окне, MIME текстовый ----
     let want_gzip = !partial
         && !is_head
         && file_len as usize >= GZIP_MIN
@@ -1805,7 +2005,6 @@ async fn serve_static<W: AsyncWriteExt + Unpin>(
     if want_gzip {
         let body = tokio::fs::read(path).await?;
         let compressed = gzip_compress(&body)?;
-        // сжимаем только если реально меньше
         if compressed.len() < body.len() {
             let head = format!(
                 "HTTP/1.1 200 OK\r\nContent-Type: {mime}\r\nContent-Encoding: gzip\r\nContent-Length: {}\r\nETag: {etag}\r\nLast-Modified: {http_date}\r\nAccept-Ranges: bytes\r\nVary: Accept-Encoding\r\nConnection: keep-alive\r\n\r\n",
@@ -1815,10 +2014,8 @@ async fn serve_static<W: AsyncWriteExt + Unpin>(
             cw.write_all(&compressed).await?;
             return Ok((200, compressed.len() as u64));
         }
-        // не сжалось — падаем в обычную отдачу ниже
     }
 
-    // ---- обычная отдача ----
     let status_line = if partial { "206 Partial Content" } else { "200 OK" };
     let mut head = format!(
         "HTTP/1.1 {status_line}\r\nContent-Type: {mime}\r\nContent-Length: {content_len}\r\nETag: {etag}\r\nLast-Modified: {http_date}\r\nAccept-Ranges: bytes\r\nVary: Accept-Encoding\r\n"
@@ -1865,7 +2062,6 @@ async fn serve_static_h2(
     let etag = format!("\"{:x}-{:x}\"", mtime_secs, file_len);
     let http_date = format_http_date(mtime);
 
-    // 304
     if let Some(inm) = req.headers().get("if-none-match").and_then(|v| v.to_str().ok()) {
         if inm.trim() == etag || inm.trim() == "*" {
             let resp = Response::builder().status(304)
@@ -1882,7 +2078,6 @@ async fn serve_static_h2(
     let mime = mime_of(path);
     let is_head = method.eq_ignore_ascii_case("HEAD");
 
-    // gzip для h2
     let h2_wants_gzip = !is_head
         && (file_len as usize) >= GZIP_MIN
         && (file_len as usize) <= GZIP_MAX
@@ -1949,11 +2144,8 @@ async fn serve_static_h2(
 }
 
 // ============================================================
-//  GZIP
+//  GZIP helpers
 // ============================================================
-
-const GZIP_MIN: usize = 512;
-const GZIP_MAX: usize = 4 * 1024 * 1024;
 
 fn is_compressible(mime: &str) -> bool {
     let m = mime.to_ascii_lowercase();

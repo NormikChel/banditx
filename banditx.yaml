@@ -1,7 +1,9 @@
 server:
   listen: "127.0.0.1:8080"
   tls_listen: "127.0.0.1:8443"
-  access_log: "access.log"
+  access_log:
+    path: "access.log"
+    format: combined
 
 routes:
   - prefix: "/static/"
