@@ -4,6 +4,9 @@ server:
   access_log: "access.log"
 
 routes:
+  - prefix: "/static/"
+    static_root: "C:/Users/Normi_vuaosd7/testbackend/static"
+
   - prefix: "/php/"
     upstreams:
       - "127.0.0.1:9000"

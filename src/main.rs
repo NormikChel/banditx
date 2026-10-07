@@ -68,10 +68,11 @@ struct ServerCfg {
 #[derive(Debug, Deserialize, Clone)]
 struct RouteCfg {
     prefix: String,
-    upstreams: Vec<String>,
+    #[serde(default)] upstreams: Vec<String>,
     #[serde(default)] strategy: Strategy,
     #[serde(default)] kind: RouteKind,
     #[serde(default)] doc_root: Option<String>,
+    #[serde(default)] static_root: Option<String>,
 }
 
 #[derive(Debug, Clone, Copy, Deserialize, Default, PartialEq, Eq)]
@@ -655,6 +656,41 @@ where S: AsyncRead + AsyncWrite + Unpin + Send + 'static {
             }
         };
 
+        // ---- статика ----
+        if let Some(static_root) = &route.static_root {
+            // отрезаем prefix маршрута: /static/hello.txt + prefix=/static/ → /hello.txt
+            let rel = parsed.path
+                .strip_prefix(route.prefix.trim_end_matches('/'))
+                .unwrap_or(&parsed.path);
+            let rel = if rel.is_empty() { "/" } else { rel };
+            match safe_join(static_root, rel) {
+                Some(file_path) if file_path.is_file() => {
+                    match serve_static(&mut cw, &file_path, &parsed, &req_raw).await {
+                        Ok((status, bytes)) => {
+                            app.metrics.record_status(status);
+                            let ua = parsed.headers_ua_from_raw(&req_raw);
+                            let version = format!("HTTP/1.{}", parsed.version_minor);
+                            app.access_log.log(peer, &parsed.method, &parsed.full_target(), &version, status, bytes, &ua);
+                            if parsed.connection_close { return Ok(()); }
+                            continue;
+                        }
+                        Err(e) => {
+                            eprintln!("[static] {e}");
+                            cw.write_all(b"HTTP/1.1 500 Internal Server Error\r\nContent-Length: 0\r\nConnection: close\r\n\r\n").await.ok();
+                            return Ok(());
+                        }
+                    }
+                }
+                _ => {
+                    // статический маршрут — терминальный, файла нет → 404
+                    cw.write_all(b"HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: keep-alive\r\n\r\n").await.ok();
+                    app.metrics.record_status(404);
+                    if parsed.connection_close { return Ok(()); }
+                    continue;
+                }
+            }
+        }
+
         let balancer = app.balancers.get(&route.prefix).cloned();
         let upstream = match &balancer {
             Some(b) => match b.pick(peer.ip()) {
@@ -1011,6 +1047,22 @@ async fn handle_h2_stream(
 
     if route.kind == RouteKind::Fastcgi {
         return send_h2_body(&mut respond, 501, "text/plain", b"fastcgi over h2 not implemented yet").await;
+    }
+
+    // ---- статика по h2 ----
+    if let Some(static_root) = &route.static_root {
+        let rel = path
+            .strip_prefix(route.prefix.trim_end_matches('/'))
+            .unwrap_or(&path);
+        let rel = if rel.is_empty() { "/" } else { rel };
+        match safe_join(static_root, rel) {
+            Some(file_path) if file_path.is_file() => {
+                return serve_static_h2(&mut respond, &file_path, &method, &req).await;
+            }
+            _ => {
+                return send_h2_body(&mut respond, 404, "text/plain", b"not found").await;
+            }
+        }
     }
 
     let balancer = match app.balancers.get(&route.prefix) {
@@ -1570,4 +1622,263 @@ where R: AsyncBufReadExt + Unpin, W: AsyncWriteExt + Unpin {
             total += n as u64;
         },
     }
+}
+
+// ============================================================
+//  STATIC FILE SERVING
+// ============================================================
+
+fn safe_join(root: &str, url_path: &str) -> Option<std::path::PathBuf> {
+    use std::path::Component;
+    let mut p = std::path::PathBuf::from(root);
+    let url = std::path::Path::new(url_path);
+    for c in url.components() {
+        match c {
+            Component::Normal(seg) => {
+                let s = seg.to_string_lossy();
+                if s.is_empty() || s.contains('\0') { return None; }
+                p.push(seg);
+            }
+            Component::RootDir | Component::CurDir => {}
+            Component::ParentDir | Component::Prefix(_) => return None,
+        }
+    }
+    Some(p)
+}
+
+fn mime_of(p: &std::path::Path) -> &'static str {
+    match p.extension().and_then(|e| e.to_str()).map(|s| s.to_ascii_lowercase()).as_deref() {
+        Some("html") | Some("htm") => "text/html; charset=utf-8",
+        Some("css") => "text/css; charset=utf-8",
+        Some("js") | Some("mjs") => "application/javascript",
+        Some("json") => "application/json",
+        Some("png") => "image/png",
+        Some("jpg") | Some("jpeg") => "image/jpeg",
+        Some("gif") => "image/gif",
+        Some("svg") => "image/svg+xml",
+        Some("webp") => "image/webp",
+        Some("ico") => "image/x-icon",
+        Some("wasm") => "application/wasm",
+        Some("txt") => "text/plain; charset=utf-8",
+        Some("xml") => "application/xml",
+        Some("pdf") => "application/pdf",
+        Some("woff") => "font/woff",
+        Some("woff2") => "font/woff2",
+        Some("ttf") => "font/ttf",
+        Some("otf") => "font/otf",
+        Some("mp4") => "video/mp4",
+        Some("webm") => "video/webm",
+        Some("mp3") => "audio/mpeg",
+        Some("zip") => "application/zip",
+        _ => "application/octet-stream",
+    }
+}
+
+fn format_http_date(t: Option<std::time::SystemTime>) -> String {
+    let t = t.unwrap_or(std::time::SystemTime::UNIX_EPOCH);
+    let dt: chrono::DateTime<chrono::Utc> = t.into();
+    dt.format("%a, %d %b %Y %H:%M:%S GMT").to_string()
+}
+
+fn parse_http_date(s: &str) -> Option<u64> {
+    let dt = chrono::DateTime::parse_from_rfc2822(s).ok()?;
+    Some(dt.timestamp() as u64)
+}
+
+fn parse_range(header: &str, file_len: u64) -> Option<(u64, u64)> {
+    let h = header.trim();
+    if !h.starts_with("bytes=") { return None; }
+    let spec = h[6..].split(',').next()?.trim();
+    let (a, b) = spec.split_once('-')?;
+    if a.is_empty() {
+        let n: u64 = b.parse().ok()?;
+        if n == 0 || file_len == 0 { return None; }
+        let n = n.min(file_len);
+        return Some((file_len - n, file_len - 1));
+    }
+    let start: u64 = a.parse().ok()?;
+    if start >= file_len { return None; }
+    let end = if b.is_empty() {
+        file_len - 1
+    } else {
+        let e: u64 = b.parse().ok()?;
+        if e < start { return None; }
+        e.min(file_len - 1)
+    };
+    Some((start, end))
+}
+
+fn extract_conditional_headers(raw: &[u8]) -> (Option<String>, Option<String>, Option<String>) {
+    let mut headers = [httparse::EMPTY_HEADER; 96];
+    let mut req = httparse::Request::new(&mut headers);
+    if req.parse(raw).is_err() {
+        return (None, None, None);
+    }
+    let mut inm = None;
+    let mut ims = None;
+    let mut rng = None;
+    for h in req.headers.iter() {
+        if h.name.eq_ignore_ascii_case("if-none-match") {
+            inm = Some(String::from_utf8_lossy(h.value).to_string());
+        } else if h.name.eq_ignore_ascii_case("if-modified-since") {
+            ims = Some(String::from_utf8_lossy(h.value).to_string());
+        } else if h.name.eq_ignore_ascii_case("range") {
+            rng = Some(String::from_utf8_lossy(h.value).to_string());
+        }
+    }
+    (inm, ims, rng)
+}
+
+async fn serve_static<W: AsyncWriteExt + Unpin>(
+    cw: &mut W,
+    path: &std::path::Path,
+    req: &ParsedRequest,
+    req_raw: &[u8],
+) -> io::Result<(u16, u64)> {
+    let is_head = req.method.eq_ignore_ascii_case("HEAD");
+    if !is_head && !req.method.eq_ignore_ascii_case("GET") {
+        cw.write_all(b"HTTP/1.1 405 Method Not Allowed\r\nAllow: GET, HEAD\r\nContent-Length: 0\r\nConnection: keep-alive\r\n\r\n").await?;
+        return Ok((405, 0));
+    }
+
+    let meta = tokio::fs::metadata(path).await?;
+    let file_len = meta.len();
+    let mtime = meta.modified().ok();
+    let mtime_secs = mtime
+        .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+        .map(|d| d.as_secs())
+        .unwrap_or(0);
+    let etag = format!("\"{:x}-{:x}\"", mtime_secs, file_len);
+    let http_date = format_http_date(mtime);
+
+    let (if_none_match, if_modified_since, range_header) = extract_conditional_headers(req_raw);
+
+    // 304 по If-None-Match
+    if let Some(inm) = &if_none_match {
+        if inm.trim() == etag || inm.trim() == "*" {
+            let resp = format!(
+                "HTTP/1.1 304 Not Modified\r\nETag: {etag}\r\nLast-Modified: {http_date}\r\nConnection: keep-alive\r\n\r\n"
+            );
+            cw.write_all(resp.as_bytes()).await?;
+            return Ok((304, 0));
+        }
+    } else if let Some(ims) = &if_modified_since {
+        // 304 по If-Modified-Since (только если If-None-Match не задан)
+        if let Some(t) = parse_http_date(ims) {
+            if t >= mtime_secs {
+                let resp = format!(
+                    "HTTP/1.1 304 Not Modified\r\nETag: {etag}\r\nLast-Modified: {http_date}\r\nConnection: keep-alive\r\n\r\n"
+                );
+                cw.write_all(resp.as_bytes()).await?;
+                return Ok((304, 0));
+            }
+        }
+    }
+
+    let mime = mime_of(path);
+
+    let (start, end, partial) = if let Some(rh) = range_header {
+        match parse_range(&rh, file_len) {
+            Some((s, e)) => (s, e, true),
+            None => {
+                let resp = format!(
+                    "HTTP/1.1 416 Range Not Satisfiable\r\nContent-Range: bytes */{file_len}\r\nContent-Length: 0\r\nConnection: keep-alive\r\n\r\n"
+                );
+                cw.write_all(resp.as_bytes()).await?;
+                return Ok((416, 0));
+            }
+        }
+    } else {
+        (0, file_len.saturating_sub(1), false)
+    };
+
+    let content_len: u64 = if file_len == 0 { 0 } else { end - start + 1 };
+
+    let status_line = if partial { "206 Partial Content" } else { "200 OK" };
+    let mut head = format!(
+        "HTTP/1.1 {status_line}\r\nContent-Type: {mime}\r\nContent-Length: {content_len}\r\nETag: {etag}\r\nLast-Modified: {http_date}\r\nAccept-Ranges: bytes\r\n"
+    );
+    if partial {
+        head.push_str(&format!("Content-Range: bytes {start}-{end}/{file_len}\r\n"));
+    }
+    head.push_str("Connection: keep-alive\r\n\r\n");
+    cw.write_all(head.as_bytes()).await?;
+
+    let mut bytes_sent: u64 = 0;
+    if !is_head && content_len > 0 {
+        use tokio::io::AsyncSeekExt;
+        let mut file = tokio::fs::File::open(path).await?;
+        file.seek(std::io::SeekFrom::Start(start)).await?;
+        let mut remaining = content_len;
+        let mut buf = [0u8; 32 * 1024];
+        while remaining > 0 {
+            let want = remaining.min(buf.len() as u64) as usize;
+            let n = file.read(&mut buf[..want]).await?;
+            if n == 0 { break; }
+            cw.write_all(&buf[..n]).await?;
+            remaining -= n as u64;
+            bytes_sent += n as u64;
+        }
+    }
+
+    Ok((if partial { 206 } else { 200 }, bytes_sent))
+}
+
+async fn serve_static_h2(
+    respond: &mut h2::server::SendResponse<Bytes>,
+    path: &std::path::Path,
+    method: &str,
+    req: &http::Request<h2::RecvStream>,
+) -> io::Result<()> {
+    let meta = tokio::fs::metadata(path).await?;
+    let file_len = meta.len();
+    let mtime = meta.modified().ok();
+    let mtime_secs = mtime
+        .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+        .map(|d| d.as_secs())
+        .unwrap_or(0);
+    let etag = format!("\"{:x}-{:x}\"", mtime_secs, file_len);
+    let http_date = format_http_date(mtime);
+
+    // If-None-Match → 304
+    if let Some(inm) = req.headers().get("if-none-match").and_then(|v| v.to_str().ok()) {
+        if inm.trim() == etag || inm.trim() == "*" {
+            let resp = Response::builder().status(304)
+                .header("etag", etag)
+                .header("last-modified", http_date)
+                .body(())
+                .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+            let _ = respond.send_response(resp, true)
+                .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+            return Ok(());
+        }
+    }
+
+    let mime = mime_of(path);
+    let is_head = method.eq_ignore_ascii_case("HEAD");
+
+    let resp = Response::builder().status(200)
+        .header("content-type", mime)
+        .header("content-length", file_len)
+        .header("etag", etag)
+        .header("last-modified", http_date)
+        .header("accept-ranges", "bytes")
+        .body(())
+        .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+
+    let end_stream = is_head || file_len == 0;
+    let mut send = respond.send_response(resp, end_stream)
+        .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+    if end_stream { return Ok(()); }
+
+    let mut file = tokio::fs::File::open(path).await?;
+    let mut buf = [0u8; 32 * 1024];
+    loop {
+        let n = file.read(&mut buf).await?;
+        if n == 0 { break; }
+        h2_send(&mut send, &buf[..n]).await?;
+    }
+    send.send_data(Bytes::new(), true)
+        .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+    Ok(())
 }
