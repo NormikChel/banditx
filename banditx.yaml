@@ -5,10 +5,14 @@ server:
 
 routes:
   - prefix: "/php/"
-    upstream: "127.0.0.1:9000"
+    upstreams:
+      - "127.0.0.1:9000"
+    strategy: round_robin
     kind: fastcgi
     doc_root: "C:/php/www"
 
   - prefix: "/"
-    upstream: "127.0.0.1:8000"
-    upstream: "127.0.0.1:9999"
+    upstreams:
+      - "127.0.0.1:8000"
+      - "127.0.0.1:8001"
+    strategy: least_conn

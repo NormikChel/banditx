@@ -1,20 +1,18 @@
-//! banditx v0.1.0
-//! HTTP/1.1 + HTTP/2 + FastCGI reverse proxy.
+//! banditx v0.2.0 — балансировка + health checks
 //!
-//! Что нового vs v0.0.6:
-//!  - FastCGI connection pool
-//!  - Hot-reload конфига через notify + ArcSwap
-//!  - Prometheus-метрики на /_banditx/metrics
-//!  - Access log (nginx combined)
-//!  - Graceful shutdown по Ctrl+C
-//!  - Health-check TCP для апстримов (простой, фоном)
+//! Изменения от v0.1.0:
+//!  - RouteCfg.upstream → upstreams (Vec<String>)
+//!  - Добавлен strategy: round_robin | least_conn | ip_hash
+//!  - Balancer per-route, выбирает живой адрес
+//!  - Health checks: TCP-проба, выкидывание мёртвых
+//!  - X-Forwarded-Host: пробрасываем оригинальный Host клиента
 
 use std::collections::HashMap;
 use std::io::{self, Write};
-use std::net::SocketAddr;
-use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
+use std::net::{IpAddr, SocketAddr};
+use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use arc_swap::ArcSwap;
 use bytes::Bytes;
@@ -37,8 +35,10 @@ const BODY_TIMEOUT: Duration = Duration::from_secs(120);
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
 const MAX_FCGI_BODY: usize = 16 * 1024 * 1024;
 const FCGI_IDLE_MAX: usize = 64;
+const HEALTH_INTERVAL: Duration = Duration::from_secs(3);
+const HEALTH_TIMEOUT: Duration = Duration::from_secs(1);
+const HEALTH_FAIL_THRESHOLD: u32 = 2;
 
-// FastCGI record types
 const FCGI_VERSION_1: u8 = 1;
 const FCGI_BEGIN_REQUEST: u8 = 1;
 const FCGI_END_REQUEST: u8 = 3;
@@ -61,34 +61,37 @@ struct Config {
 #[derive(Debug, Deserialize, Clone)]
 struct ServerCfg {
     listen: String,
-    #[serde(default)]
-    tls_listen: Option<String>,
-    #[serde(default)]
-    access_log: Option<String>,
+    #[serde(default)] tls_listen: Option<String>,
+    #[serde(default)] access_log: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Clone)]
 struct RouteCfg {
     prefix: String,
-    upstream: String,
-    #[serde(default)]
-    kind: RouteKind,
-    #[serde(default)]
-    doc_root: Option<String>,
+    upstreams: Vec<String>,
+    #[serde(default)] strategy: Strategy,
+    #[serde(default)] kind: RouteKind,
+    #[serde(default)] doc_root: Option<String>,
+}
+
+#[derive(Debug, Clone, Copy, Deserialize, Default, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+enum Strategy {
+    #[default] RoundRobin,
+    LeastConn,
+    IpHash,
 }
 
 #[derive(Debug, Clone, Copy, Deserialize, Default, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 enum RouteKind {
-    #[default]
-    Http,
+    #[default] Http,
     Fastcgi,
 }
 
 impl Config {
     fn pick(&self, path: &str) -> Option<&RouteCfg> {
-        self.routes
-            .iter()
+        self.routes.iter()
             .filter(|r| path.starts_with(&r.prefix))
             .max_by_key(|r| r.prefix.len())
     }
@@ -119,6 +122,7 @@ struct Metrics {
     fcgi_pool_hits: AtomicU64,
     fcgi_pool_misses: AtomicU64,
     upstream_errors: AtomicU64,
+    health_check_failures: AtomicU64,
 }
 
 impl Metrics {
@@ -134,6 +138,7 @@ impl Metrics {
             fcgi_pool_hits: AtomicU64::new(0),
             fcgi_pool_misses: AtomicU64::new(0),
             upstream_errors: AtomicU64::new(0),
+            health_check_failures: AtomicU64::new(0),
         }
     }
 
@@ -147,11 +152,11 @@ impl Metrics {
         }
     }
 
-    fn render(&self) -> String {
+    fn render(&self, routes: &[RouteCfg], balancers: &HashMap<String, Arc<Balancer>>) -> String {
+        let mut s = String::with_capacity(2048);
         let g = |s: &mut String, name: &str, help: &str, v: u64| {
             s.push_str(&format!("# HELP {name} {help}\n# TYPE {name} counter\n{name} {v}\n"));
         };
-        let mut s = String::with_capacity(1024);
         g(&mut s, "banditx_requests_total", "Total requests", self.requests_total.load(Ordering::Relaxed));
         g(&mut s, "banditx_requests_2xx", "2xx", self.requests_2xx.load(Ordering::Relaxed));
         g(&mut s, "banditx_requests_4xx", "4xx", self.requests_4xx.load(Ordering::Relaxed));
@@ -161,10 +166,25 @@ impl Metrics {
         g(&mut s, "banditx_fcgi_pool_hits", "FastCGI pool hits", self.fcgi_pool_hits.load(Ordering::Relaxed));
         g(&mut s, "banditx_fcgi_pool_misses", "FastCGI pool misses", self.fcgi_pool_misses.load(Ordering::Relaxed));
         g(&mut s, "banditx_upstream_errors", "Upstream errors", self.upstream_errors.load(Ordering::Relaxed));
+        g(&mut s, "banditx_health_check_failures", "Health check failures", self.health_check_failures.load(Ordering::Relaxed));
+
         s.push_str(&format!(
             "# HELP banditx_active_conns Active connections\n# TYPE banditx_active_conns gauge\nbanditx_active_conns {}\n",
             self.active_conns.load(Ordering::Relaxed)
         ));
+
+        // Per-route, per-upstream health gauge
+        s.push_str("# HELP banditx_upstream_healthy Upstream health (1=up, 0=down)\n# TYPE banditx_upstream_healthy gauge\n");
+        for route in routes {
+            if let Some(b) = balancers.get(&route.prefix) {
+                for (addr, ok) in b.snapshot() {
+                    s.push_str(&format!(
+                        "banditx_upstream_healthy{{route=\"{}\",addr=\"{}\"}} {}\n",
+                        route.prefix, addr, if ok { 1 } else { 0 }
+                    ));
+                }
+            }
+        }
         s
     }
 }
@@ -193,26 +213,146 @@ impl AccessLog {
         let ts = chrono::Local::now().format("%d/%b/%Y:%H:%M:%S %z");
         let line = format!(
             "{ip} - - [{ts}] \"{method} {target} {version}\" {status} {bytes} \"-\" \"{ua}\"\n",
-            ip = peer.ip(),
-            ts = ts,
-            method = method,
-            target = target,
-            version = version,
-            status = status,
-            bytes = bytes,
-            ua = user_agent,
+            ip = peer.ip(), ts = ts, method = method, target = target,
+            version = version, status = status, bytes = bytes, ua = user_agent,
         );
         match &self.file {
-            Some(f) => {
-                if let Ok(mut f) = f.lock() {
-                    let _ = f.write_all(line.as_bytes());
-                }
+            Some(f) => { if let Ok(mut f) = f.lock() { let _ = f.write_all(line.as_bytes()); } }
+            None => { print!("{line}"); }
+        }
+    }
+}
+
+// ============================================================
+//  БАЛАНСЕР
+// ============================================================
+
+struct UpstreamState {
+    addr: String,
+    healthy: AtomicBool,
+    fail_streak: AtomicUsize,
+    active_conns: AtomicUsize,
+}
+
+struct Balancer {
+    strategy: Strategy,
+    upstreams: Vec<Arc<UpstreamState>>,
+    rr: AtomicUsize,
+}
+
+impl Balancer {
+    fn new(strategy: Strategy, addresses: Vec<String>) -> Self {
+        let upstreams = addresses.into_iter()
+            .map(|addr| Arc::new(UpstreamState {
+                addr,
+                healthy: AtomicBool::new(true),   // оптимистично стартуем
+                fail_streak: AtomicUsize::new(0),
+                active_conns: AtomicUsize::new(0),
+            }))
+            .collect();
+        Self { strategy, upstreams, rr: AtomicUsize::new(0) }
+    }
+
+    /// Выбрать живой upstream. Возвращает None, если все мертвы.
+    fn pick(&self, client_ip: IpAddr) -> Option<Arc<UpstreamState>> {
+        if self.upstreams.is_empty() { return None; }
+
+        // Кандидаты — только живые. Клонируем Arc, чтобы не держать borrow на self.upstreams.
+        let healthy: Vec<Arc<UpstreamState>> = self.upstreams.iter()
+            .filter(|u| u.healthy.load(Ordering::Relaxed))
+            .cloned()
+            .collect();
+        if healthy.is_empty() { return None; }
+
+        match self.strategy {
+            Strategy::RoundRobin => {
+                let i = self.rr.fetch_add(1, Ordering::Relaxed);
+                Some(healthy[i % healthy.len()].clone())
             }
-            None => {
-                print!("{line}");
+            Strategy::LeastConn => {
+                healthy.iter()
+                    .min_by_key(|u| u.active_conns.load(Ordering::Relaxed))
+                    .cloned()
+            }
+            Strategy::IpHash => {
+                // Простой FNV-хэш по IP
+                let mut h: u64 = 1469598103934665603;
+                for b in client_ip.to_string().as_bytes() {
+                    h ^= *b as u64;
+                    h = h.wrapping_mul(1099511628211);
+                }
+                Some(healthy[(h as usize) % healthy.len()].clone())
             }
         }
     }
+
+    fn mark_fail(&self, addr: &str, metrics: &Metrics) {
+        for u in &self.upstreams {
+            if u.addr == addr {
+                let streak = u.fail_streak.fetch_add(1, Ordering::Relaxed) + 1;
+                if streak >= HEALTH_FAIL_THRESHOLD as usize {
+                    if u.healthy.swap(false, Ordering::Relaxed) {
+                        eprintln!("banditx: upstream {} marked DOWN", addr);
+                    }
+                    metrics.health_check_failures.fetch_add(1, Ordering::Relaxed);
+                }
+                return;
+            }
+        }
+    }
+
+    fn mark_ok(&self, addr: &str) {
+        for u in &self.upstreams {
+            if u.addr == addr {
+                u.fail_streak.store(0, Ordering::Relaxed);
+                if !u.healthy.swap(true, Ordering::Relaxed) {
+                    eprintln!("banditx: upstream {} marked UP", addr);
+                }
+                return;
+            }
+        }
+    }
+
+    fn snapshot(&self) -> Vec<(String, bool)> {
+        self.upstreams.iter()
+            .map(|u| (u.addr.clone(), u.healthy.load(Ordering::Relaxed)))
+            .collect()
+    }
+}
+
+// ============================================================
+//  HEALTH CHECKS
+// ============================================================
+
+fn spawn_health_checks(app: Arc<App>) {
+    tokio::spawn(async move {
+        loop {
+            tokio::time::sleep(HEALTH_INTERVAL).await;
+            let cfg = app.cfg.load_full();
+            for route in &cfg.routes {
+                let balancer = match app.balancers.get(&route.prefix) {
+                    Some(b) => b.clone(),
+                    None => continue,
+                };
+                for u in &balancer.upstreams {
+                    let addr = u.addr.clone();
+                    let bal = balancer.clone();
+                    let metrics = app.metrics.clone();
+                    tokio::spawn(async move {
+                        let ok = matches!(
+                            timeout(HEALTH_TIMEOUT, TcpStream::connect(&addr)).await,
+                            Ok(Ok(_))
+                        );
+                        if ok {
+                            bal.mark_ok(&addr);
+                        } else {
+                            bal.mark_fail(&addr, &metrics);
+                        }
+                    });
+                }
+            }
+        }
+    });
 }
 
 // ============================================================
@@ -234,7 +374,6 @@ impl FcgiPool {
             let popped = self.idle.lock().unwrap().pop();
             match popped {
                 Some(s) => {
-                    // stale-check: если на сокете висит EOF или данные — он мёртв
                     let mut b = [0u8; 1];
                     match s.try_read(&mut b) {
                         Ok(0) => continue,
@@ -258,21 +397,16 @@ impl FcgiPool {
 
     fn put(&self, s: TcpStream) {
         let mut g = self.idle.lock().unwrap();
-        if g.len() < FCGI_IDLE_MAX {
-            g.push(s);
-        }
+        if g.len() < FCGI_IDLE_MAX { g.push(s); }
     }
 }
 
-// Глобальный реестр пулов по адресу
 struct PoolRegistry {
     fcgi: Mutex<HashMap<String, Arc<FcgiPool>>>,
 }
 
 impl PoolRegistry {
-    fn new() -> Self {
-        Self { fcgi: Mutex::new(HashMap::new()) }
-    }
+    fn new() -> Self { Self { fcgi: Mutex::new(HashMap::new()) } }
 
     fn fcgi(&self, addr: &str) -> Arc<FcgiPool> {
         let mut g = self.fcgi.lock().unwrap();
@@ -283,7 +417,7 @@ impl PoolRegistry {
 }
 
 // ============================================================
-//  ОБЩИЙ СТЕЙТ
+//  APP
 // ============================================================
 
 struct App {
@@ -292,6 +426,16 @@ struct App {
     pools: Arc<PoolRegistry>,
     access_log: Arc<AccessLog>,
     cfg_path: String,
+    balancers: HashMap<String, Arc<Balancer>>,
+}
+
+fn build_balancers(cfg: &Config) -> HashMap<String, Arc<Balancer>> {
+    let mut m = HashMap::new();
+    for r in &cfg.routes {
+        m.insert(r.prefix.clone(),
+                 Arc::new(Balancer::new(r.strategy, r.upstreams.clone())));
+    }
+    m
 }
 
 // ============================================================
@@ -315,8 +459,7 @@ fn build_tls_acceptor() -> io::Result<TlsAcceptor> {
     use tokio_rustls::rustls::pki_types::{PrivateKeyDer, PrivatePkcs8KeyDer};
 
     let CertifiedKey { cert, key_pair } = generate_simple_self_signed(vec![
-        "localhost".to_string(),
-        "127.0.0.1".to_string(),
+        "localhost".to_string(), "127.0.0.1".to_string(),
     ])
     .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("cert: {e}")))?;
 
@@ -340,24 +483,22 @@ async fn main() -> io::Result<()> {
     let cfg_path = std::env::args().nth(1).unwrap_or_else(|| "banditx.yaml".to_string());
     let cfg = load_config(&cfg_path)?;
 
+    let balancers = build_balancers(&cfg);
     let app = Arc::new(App {
         cfg: ArcSwap::from_pointee(cfg.clone()),
         metrics: Arc::new(Metrics::new()),
         pools: Arc::new(PoolRegistry::new()),
         access_log: Arc::new(AccessLog::new(cfg.server.access_log.as_deref())?),
         cfg_path: cfg_path.clone(),
+        balancers,
     });
 
-    println!(
-        "banditx v0.1.0 | http://{} | {} route(s)",
-        cfg.server.listen,
-        cfg.routes.len()
-    );
+    println!("banditx v0.2.0 | http://{} | {} route(s)",
+             cfg.server.listen, cfg.routes.len());
 
-    // --- hot-reload ---
     spawn_config_watcher(app.clone());
+    spawn_health_checks(app.clone());
 
-    // --- graceful shutdown signal ---
     let shutdown = Arc::new(Notify::new());
     {
         let shutdown = shutdown.clone();
@@ -368,12 +509,10 @@ async fn main() -> io::Result<()> {
         });
     }
 
-    // --- TLS listener ---
     if let Some(tls_addr) = &cfg.server.tls_listen {
         let acceptor = build_tls_acceptor()?;
         let listener = TcpListener::bind(tls_addr).await?;
         println!("                https://{tls_addr} (self-signed, h2 + http/1.1)");
-
         let app = app.clone();
         let shutdown = shutdown.clone();
         tokio::spawn(async move {
@@ -381,29 +520,15 @@ async fn main() -> io::Result<()> {
                 tokio::select! {
                     _ = shutdown.notified() => return,
                     r = listener.accept() => {
-                        let (sock, peer) = match r {
-                            Ok(x) => x,
-                            Err(e) => { eprintln!("tls accept: {e}"); continue; }
-                        };
+                        let (sock, peer) = match r { Ok(x) => x, Err(_) => continue };
                         let acceptor = acceptor.clone();
                         let app = app.clone();
                         tokio::spawn(async move {
-                            let tls_stream = match acceptor.accept(sock).await {
-                                Ok(s) => s,
-                                Err(e) => { eprintln!("[tls {peer}] {e}"); return; }
-                            };
+                            let tls_stream = match acceptor.accept(sock).await { Ok(s) => s, Err(_) => return };
                             let alpn = tls_stream.get_ref().1.alpn_protocol().map(|p| p.to_vec());
                             match alpn.as_deref() {
-                                Some(b"h2") => {
-                                    if let Err(e) = serve_h2(tls_stream, peer, app).await {
-                                        eprintln!("[h2 {peer}] {e}");
-                                    }
-                                }
-                                _ => {
-                                    if let Err(e) = serve_h1(tls_stream, peer, app).await {
-                                        eprintln!("[h1-tls {peer}] {e}");
-                                    }
-                                }
+                                Some(b"h2") => { let _ = serve_h2(tls_stream, peer, app).await; }
+                                _ => { let _ = serve_h1(tls_stream, peer, app).await; }
                             }
                         });
                     }
@@ -412,10 +537,10 @@ async fn main() -> io::Result<()> {
         });
     }
 
-    // --- HTTP listener ---
     for r in &cfg.routes {
         let k = match r.kind { RouteKind::Http => "http", RouteKind::Fastcgi => "fcgi" };
-        println!("  {} -> {} [{}]", r.prefix, r.upstream, k);
+        let strat = match r.strategy { Strategy::RoundRobin => "rr", Strategy::LeastConn => "lc", Strategy::IpHash => "ih" };
+        println!("  {} -> {:?} [{} / {}]", r.prefix, r.upstreams, k, strat);
     }
     println!("  metrics: http://{}/_banditx/metrics", cfg.server.listen);
 
@@ -424,22 +549,15 @@ async fn main() -> io::Result<()> {
         tokio::select! {
             _ = shutdown.notified() => {
                 println!("banditx: stopped accepting new connections");
-                // Дать 3 сек на доигрывание активных — они в отдельных тасках,
-                // и tokio runtime дропнет их сам при выходе.
                 tokio::time::sleep(Duration::from_millis(300)).await;
                 return Ok(());
             }
             r = listener.accept() => {
-                let (client, peer) = match r {
-                    Ok(x) => x,
-                    Err(e) => { eprintln!("accept: {e}"); continue; }
-                };
+                let (client, peer) = match r { Ok(x) => x, Err(_) => continue };
                 let app = app.clone();
                 app.metrics.active_conns.fetch_add(1, Ordering::Relaxed);
                 tokio::spawn(async move {
-                    if let Err(e) = serve_h1(client, peer, app.clone()).await {
-                        eprintln!("[{peer}] {e}");
-                    }
+                    let _ = serve_h1(client, peer, app.clone()).await;
                     app.metrics.active_conns.fetch_sub(1, Ordering::Relaxed);
                 });
             }
@@ -463,21 +581,15 @@ fn spawn_config_watcher(app: Arc<App>) {
                 let s = p.to_string_lossy();
                 s.ends_with(".yaml") || s.ends_with(".yml")
             });
-            if interesting {
-                let _ = tx.send(());
-            }
+            if interesting { let _ = tx.send(()); }
         }
     }) {
         Ok(w) => w,
-        Err(e) => {
-            eprintln!("watcher init: {e}");
-            return;
-        }
+        Err(e) => { eprintln!("watcher init: {e}"); return; }
     };
 
     let watch_dir = std::path::Path::new(&path)
-        .parent()
-        .map(|p| p.to_path_buf())
+        .parent().map(|p| p.to_path_buf())
         .unwrap_or_else(|| std::path::PathBuf::from("."));
     if let Err(e) = watcher.watch(&watch_dir, RecursiveMode::NonRecursive) {
         eprintln!("watcher watch: {e}");
@@ -485,23 +597,16 @@ fn spawn_config_watcher(app: Arc<App>) {
     }
 
     tokio::spawn(async move {
-        // Держим watcher живым, привязав его к таске.
         let _keep = watcher;
         while rx.recv().await.is_some() {
             tokio::time::sleep(Duration::from_millis(200)).await;
             while rx.try_recv().is_ok() {}
-
             match load_config(&path) {
                 Ok(new_cfg) => {
                     app.cfg.store(Arc::new(new_cfg.clone()));
-                    println!(
-                        "banditx: config reloaded ({} route(s))",
-                        new_cfg.routes.len()
-                    );
+                    println!("banditx: config reloaded ({} route(s))", new_cfg.routes.len());
                 }
-                Err(e) => {
-                    eprintln!("banditx: reload failed, keeping old config: {e}");
-                }
+                Err(e) => eprintln!("banditx: reload failed, keeping old config: {e}"),
             }
         }
     });
@@ -512,31 +617,23 @@ fn spawn_config_watcher(app: Arc<App>) {
 // ============================================================
 
 async fn serve_h1<S>(stream: S, peer: SocketAddr, app: Arc<App>) -> io::Result<()>
-where
-    S: AsyncRead + AsyncWrite + Unpin + Send + 'static,
-{
+where S: AsyncRead + AsyncWrite + Unpin + Send + 'static {
     let (r, mut cw) = tokio::io::split(stream);
     let mut cr = BufReader::new(r);
 
     loop {
         let cfg = app.cfg.load_full();
-
-        let req_raw = match read_header_block(&mut cr).await? {
-            Some(b) => b,
-            None => return Ok(()),
-        };
-
+        let req_raw = match read_header_block(&mut cr).await? { Some(b) => b, None => return Ok(()) };
         let parsed = match parse_request(&req_raw) {
             Ok(p) => p,
-            Err(e) => {
+            Err(_) => {
                 cw.write_all(b"HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\nConnection: close\r\n\r\n").await.ok();
-                return Err(e);
+                return Ok(());
             }
         };
 
-        // ---- metrics endpoint ----
         if parsed.path == "/_banditx/metrics" {
-            let body = app.metrics.render();
+            let body = app.metrics.render(&cfg.routes, &app.balancers);
             let out = format!(
                 "HTTP/1.1 200 OK\r\nContent-Type: text/plain; version=0.0.4\r\nContent-Length: {}\r\nConnection: keep-alive\r\n\r\n{}",
                 body.len(), body
@@ -553,44 +650,61 @@ where
             }
         };
 
-        let started = Instant::now();
-        let (status, bytes_out, keep) = match route.kind {
-            RouteKind::Http => {
-                proxy_http_h1(&mut cr, &mut cw, &parsed, &req_raw, peer, &route.upstream, &app).await
-                    .unwrap_or((502, 0, false))
-            }
-            RouteKind::Fastcgi => {
-                proxy_fastcgi_h1(&mut cr, &mut cw, &parsed, &req_raw, peer, &route, &app).await
-                    .unwrap_or((502, 0, false))
+        let balancer = app.balancers.get(&route.prefix).cloned();
+        let upstream = match &balancer {
+            Some(b) => match b.pick(peer.ip()) {
+                Some(u) => u,
+                None => {
+                    cw.write_all(b"HTTP/1.1 503 Service Unavailable\r\nContent-Length: 0\r\nConnection: close\r\n\r\n").await.ok();
+                    app.metrics.record_status(503);
+                    return Ok(());
+                }
+            },
+            None => {
+                cw.write_all(b"HTTP/1.1 502 Bad Gateway\r\nContent-Length: 0\r\nConnection: close\r\n\r\n").await.ok();
+                return Ok(());
             }
         };
+        upstream.active_conns.fetch_add(1, Ordering::Relaxed);
 
+        let addr = upstream.addr.clone();
+        let (status, bytes_out, keep) = match route.kind {
+            RouteKind::Http => {
+                proxy_http_h1(&mut cr, &mut cw, &parsed, &req_raw, peer, &addr, &app).await
+                    .unwrap_or_else(|_| {
+                        if let Some(b) = &balancer { b.mark_fail(&addr, &app.metrics); }
+                        (502, 0, false)
+                    })
+            }
+            RouteKind::Fastcgi => {
+                proxy_fastcgi_h1(&mut cr, &mut cw, &parsed, &req_raw, peer, &route, &addr, &app).await
+                    .unwrap_or_else(|_| {
+                        if let Some(b) = &balancer { b.mark_fail(&addr, &app.metrics); }
+                        (502, 0, false)
+                    })
+            }
+        };
+        upstream.active_conns.fetch_sub(1, Ordering::Relaxed);
         app.metrics.record_status(status);
-        let ua = parsed.headers_ua();
+
+        let ua = parsed.headers_ua_from_raw(&req_raw);
         let version = format!("HTTP/1.{}", parsed.version_minor);
         app.access_log.log(peer, &parsed.method, &parsed.full_target(), &version, status, bytes_out, &ua);
 
-        let _ = started;
-        if !keep || parsed.connection_close {
-            return Ok(());
-        }
+        if !keep || parsed.connection_close { return Ok(()); }
     }
 }
 
 // ============================================================
-//  HTTP PROXY H1
+//  HTTP PROXY
 // ============================================================
 
-#[allow(clippy::too_many_arguments)]
 async fn proxy_http_h1<R, W>(
     cr: &mut R, cw: &mut W,
     parsed: &ParsedRequest, req_raw: &[u8],
     peer: SocketAddr, upstream: &str, app: &Arc<App>,
 ) -> io::Result<(u16, u64, bool)>
-where
-    R: AsyncBufReadExt + Unpin,
-    W: AsyncWriteExt + Unpin,
-{
+where R: AsyncBufReadExt + Unpin, W: AsyncWriteExt + Unpin {
     let up = match timeout(CONNECT_TIMEOUT, TcpStream::connect(upstream)).await {
         Ok(Ok(s)) => s,
         _ => {
@@ -620,46 +734,30 @@ where
             return Ok((502, 0, false));
         }
     };
-    let resp = match parse_response(&resp_raw) {
-        Ok(r) => r,
-        Err(_) => {
-            cw.write_all(b"HTTP/1.1 502 Bad Gateway\r\nContent-Length: 0\r\nConnection: close\r\n\r\n").await.ok();
-            return Ok((502, 0, false));
-        }
-    };
+    let resp = parse_response(&resp_raw).map_err(|_| io::Error::new(io::ErrorKind::InvalidData, "bad resp"))?;
 
     let upstream_close = resp.connection_close;
     let framing = response_framing(&resp, &parsed.method);
-    let close_client = parsed.connection_close
-        || upstream_close
-        || matches!(framing, Framing::UntilClose);
+    let close_client = parsed.connection_close || upstream_close || matches!(framing, Framing::UntilClose);
 
     let out_head = build_response_head(&resp, close_client);
     cw.write_all(&out_head).await?;
     let n = forward_response_body(&mut ur, cw, framing).await.unwrap_or(0);
-
     Ok((resp.code, n, !close_client))
 }
 
 // ============================================================
-//  FASTCGI PROXY H1
+//  FASTCGI PROXY
 // ============================================================
 
-#[allow(clippy::too_many_arguments)]
 async fn proxy_fastcgi_h1<R, W>(
     cr: &mut R, cw: &mut W,
     parsed: &ParsedRequest, req_raw: &[u8],
-    peer: SocketAddr, route: &RouteCfg, app: &Arc<App>,
+    peer: SocketAddr, route: &RouteCfg, addr: &str, app: &Arc<App>,
 ) -> io::Result<(u16, u64, bool)>
-where
-    R: AsyncBufReadExt + Unpin,
-    W: AsyncWriteExt + Unpin,
-{
-    // 1. Тело в буфер (FPM хочет CONTENT_LENGTH)
+where R: AsyncBufReadExt + Unpin, W: AsyncWriteExt + Unpin {
     let body = read_body_bounded(cr, parsed.framing, MAX_FCGI_BODY).await?;
-
-    // 2. Пул
-    let pool = app.pools.fcgi(&route.upstream);
+    let pool = app.pools.fcgi(addr);
     let mut up = match pool.get(&app.metrics).await {
         Ok(s) => s,
         Err(e) => {
@@ -670,17 +768,14 @@ where
         }
     };
 
-    // 3. Формируем PARAMS
     let doc_root = route.doc_root.as_deref().unwrap_or("/");
     let script_filename = format!("{}{}", doc_root.trim_end_matches('/'), parsed.path);
 
     let mut params = Vec::new();
-    let add = |k: &str, v: &str, out: &mut Vec<u8>| {
-        fcgi_encode_nv(out, k.as_bytes(), v.as_bytes())
-    };
+    let add = |k: &str, v: &str, out: &mut Vec<u8>| fcgi_encode_nv(out, k.as_bytes(), v.as_bytes());
 
     add("GATEWAY_INTERFACE", "CGI/1.1", &mut params);
-    add("SERVER_SOFTWARE", "banditx/0.1.0", &mut params);
+    add("SERVER_SOFTWARE", "banditx/0.2.0", &mut params);
     add("SERVER_PROTOCOL", "HTTP/1.1", &mut params);
     add("REQUEST_METHOD", &parsed.method, &mut params);
     let uri = if parsed.query.is_empty() { parsed.path.clone() }
@@ -703,16 +798,12 @@ where
             for h in hreq.headers.iter() {
                 let n = h.name.to_ascii_uppercase().replace('-', "_");
                 let v = std::str::from_utf8(h.value).unwrap_or("");
-                if n == "CONTENT_TYPE" {
-                    add("CONTENT_TYPE", v, &mut params);
-                } else if n != "CONTENT_LENGTH" {
-                    add(&format!("HTTP_{n}"), v, &mut params);
-                }
+                if n == "CONTENT_TYPE" { add("CONTENT_TYPE", v, &mut params); }
+                else if n != "CONTENT_LENGTH" { add(&format!("HTTP_{n}"), v, &mut params); }
             }
         }
     }
 
-    // 4. BEGIN_REQUEST + PARAMS + STDIN
     let req_id: u16 = 1;
     let mut begin = Vec::with_capacity(8);
     begin.extend_from_slice(&FCGI_RESPONDER.to_be_bytes());
@@ -742,7 +833,6 @@ where
     up.write_all(&b).await?;
     up.flush().await.ok();
 
-    // 5. Читаем ответ
     let mut stdout = Vec::new();
     let mut pool_ok = true;
     let read_result: io::Result<()> = async {
@@ -764,20 +854,11 @@ where
                 _ => {}
             }
         }
-    }
-    .await;
+    }.await;
 
-    if let Err(e) = read_result {
-        eprintln!("[fcgi read] {e}");
-        pool_ok = false;
-    }
+    if let Err(e) = read_result { eprintln!("[fcgi read] {e}"); pool_ok = false; }
+    if pool_ok { pool.put(up); }
 
-    // Возвращаем соединение в пул только если оно в чистом состоянии
-    if pool_ok {
-        pool.put(up);
-    }
-
-    // 6. CGI → HTTP/1.1
     let (cgi_headers, cgi_body) = split_cgi_response(&stdout);
     let mut status_code: u16 = 200;
     let mut status_line = "200 OK".to_string();
@@ -786,10 +867,8 @@ where
     for (n, v) in cgi_headers {
         if n.eq_ignore_ascii_case("status") {
             status_line = v.clone();
-            if let Some(code_str) = v.split_whitespace().next() {
-                if let Ok(c) = code_str.parse::<u16>() {
-                    status_code = c;
-                }
+            if let Some(c) = v.split_whitespace().next().and_then(|s| s.parse::<u16>().ok()) {
+                status_code = c;
             }
             continue;
         }
@@ -814,9 +893,7 @@ where
 fn split_cgi_response(raw: &[u8]) -> (Vec<(String, String)>, Vec<u8>) {
     let idx = find_subslice(raw, b"\r\n\r\n").map(|i| (i, 4))
         .or_else(|| find_subslice(raw, b"\n\n").map(|i| (i, 2)));
-    let Some((i, sep)) = idx else {
-        return (Vec::new(), raw.to_vec());
-    };
+    let Some((i, sep)) = idx else { return (Vec::new(), raw.to_vec()); };
     let header_block = &raw[..i];
     let body = raw[i + sep..].to_vec();
     let mut headers = Vec::new();
@@ -836,10 +913,6 @@ fn find_subslice(hay: &[u8], needle: &[u8]) -> Option<usize> {
     if needle.is_empty() || hay.len() < needle.len() { return None; }
     hay.windows(needle.len()).position(|w| w == needle)
 }
-
-// ============================================================
-//  FastCGI RECORDS
-// ============================================================
 
 fn fcgi_write_record(out: &mut Vec<u8>, req_id: u16, ty: u8, content: &[u8]) {
     let clen = content.len() as u16;
@@ -880,10 +953,7 @@ async fn fcgi_read_record<R: AsyncReadExt + Unpin>(
     let pad = hdr[6] as usize;
     let mut content = vec![0u8; clen];
     if clen > 0 { r.read_exact(&mut content).await?; }
-    if pad > 0 {
-        let mut p = vec![0u8; pad];
-        r.read_exact(&mut p).await?;
-    }
+    if pad > 0 { let mut p = vec![0u8; pad]; r.read_exact(&mut p).await?; }
     Ok(Some((ty, req_id, content)))
 }
 
@@ -892,22 +962,16 @@ async fn fcgi_read_record<R: AsyncReadExt + Unpin>(
 // ============================================================
 
 async fn serve_h2<S>(stream: S, peer: SocketAddr, app: Arc<App>) -> io::Result<()>
-where
-    S: AsyncRead + AsyncWrite + Unpin + Send + 'static,
-{
+where S: AsyncRead + AsyncWrite + Unpin + Send + 'static {
     let mut conn = h2_server::Builder::new()
         .max_concurrent_streams(256)
         .initial_window_size(1024 * 1024)
         .initial_connection_window_size(16 * 1024 * 1024)
-        .handshake(stream)
-        .await
+        .handshake(stream).await
         .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("h2: {e}")))?;
 
     while let Some(r) = conn.accept().await {
-        let (req, respond) = match r {
-            Ok(x) => x,
-            Err(e) => { eprintln!("[{peer}] h2 accept: {e}"); break; }
-        };
+        let (req, respond) = match r { Ok(x) => x, Err(e) => { eprintln!("[{peer}] h2 accept: {e}"); break; } };
         let app = app.clone();
         tokio::spawn(async move {
             if let Err(e) = handle_h2_stream(req, respond, peer, app).await {
@@ -931,7 +995,7 @@ async fn handle_h2_stream(
     let target = if query.is_empty() { path.clone() } else { format!("{path}?{query}") };
 
     if path == "/_banditx/metrics" {
-        let body = app.metrics.render().into_bytes();
+        let body = app.metrics.render(&cfg.routes, &app.balancers).into_bytes();
         return send_h2_body(&mut respond, 200, "text/plain; version=0.0.4", &body).await;
     }
 
@@ -944,9 +1008,21 @@ async fn handle_h2_stream(
         return send_h2_body(&mut respond, 501, "text/plain", b"fastcgi over h2 not implemented yet").await;
     }
 
-    let up = match timeout(CONNECT_TIMEOUT, TcpStream::connect(&route.upstream)).await {
+    let balancer = match app.balancers.get(&route.prefix) {
+        Some(b) => b.clone(),
+        None => return send_h2_body(&mut respond, 502, "text/plain", b"no balancer").await,
+    };
+    let upstream = match balancer.pick(peer.ip()) {
+        Some(u) => u,
+        None => return send_h2_body(&mut respond, 503, "text/plain", b"all upstreams down").await,
+    };
+
+    let up = match timeout(CONNECT_TIMEOUT, TcpStream::connect(&upstream.addr)).await {
         Ok(Ok(s)) => s,
-        _ => return send_h2_body(&mut respond, 502, "text/plain", b"upstream down").await,
+        _ => {
+            balancer.mark_fail(&upstream.addr, &app.metrics);
+            return send_h2_body(&mut respond, 502, "text/plain", b"upstream down").await;
+        }
     };
     up.set_nodelay(true).ok();
     let (ur, mut uw) = up.into_split();
@@ -958,6 +1034,8 @@ async fn handle_h2_stream(
     fwd.extend_from_slice(target.as_bytes());
     fwd.extend_from_slice(b" HTTP/1.1\r\n");
 
+    let original_host = req.uri().authority().map(|a| a.to_string()).unwrap_or_default();
+
     for (name, value) in req.headers() {
         let n = name.as_str();
         if n.starts_with(':') { continue; }
@@ -968,13 +1046,13 @@ async fn handle_h2_stream(
         fwd.extend_from_slice(value.as_bytes());
         fwd.extend_from_slice(b"\r\n");
     }
-    let authority = req.uri().authority().map(|a| a.to_string())
-        .unwrap_or_else(|| route.upstream.clone());
-    fwd.extend_from_slice(b"Host: ");
-    fwd.extend_from_slice(authority.as_bytes());
-    fwd.extend_from_slice(b"\r\nX-Forwarded-For: ");
-    fwd.extend_from_slice(peer.ip().to_string().as_bytes());
-    fwd.extend_from_slice(b"\r\nX-Forwarded-Proto: https\r\nConnection: keep-alive\r\n\r\n");
+    let host = if original_host.is_empty() { upstream.addr.clone() } else { original_host.clone() };
+    fwd.extend_from_slice(b"Host: "); fwd.extend_from_slice(host.as_bytes()); fwd.extend_from_slice(b"\r\n");
+    fwd.extend_from_slice(b"X-Real-IP: "); fwd.extend_from_slice(peer.ip().to_string().as_bytes()); fwd.extend_from_slice(b"\r\n");
+    fwd.extend_from_slice(b"X-Forwarded-For: "); fwd.extend_from_slice(peer.ip().to_string().as_bytes()); fwd.extend_from_slice(b"\r\n");
+    fwd.extend_from_slice(b"X-Forwarded-Proto: https\r\n");
+    fwd.extend_from_slice(b"X-Forwarded-Host: "); fwd.extend_from_slice(host.as_bytes()); fwd.extend_from_slice(b"\r\n");
+    fwd.extend_from_slice(b"Connection: keep-alive\r\n\r\n");
     uw.write_all(&fwd).await?;
 
     let mut body = req.into_body();
@@ -986,16 +1064,15 @@ async fn handle_h2_stream(
 
     let resp_raw = match read_header_block(&mut ur).await? {
         Some(b) => b,
-        None => return send_h2_body(&mut respond, 502, "text/plain", b"no response").await,
+        None => { balancer.mark_fail(&upstream.addr, &app.metrics); return send_h2_body(&mut respond, 502, "text/plain", b"no response").await; }
     };
-    let resp = parse_response(&resp_raw)
-        .map_err(|_| io::Error::new(io::ErrorKind::InvalidData, "bad response"))?;
+    let resp = parse_response(&resp_raw).map_err(|_| io::Error::new(io::ErrorKind::InvalidData, "bad resp"))?;
     let framing = response_framing(&resp, &method);
 
+    balancer.mark_ok(&upstream.addr);
     app.metrics.record_status(resp.code);
 
-    let mut h2_resp = Response::builder().status(resp.code).body(())
-        .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+    let mut h2_resp = Response::builder().status(resp.code).body(()).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
     {
         let hdrs = h2_resp.headers_mut();
         for (n, v) in &resp.headers {
@@ -1007,39 +1084,31 @@ async fn handle_h2_stream(
             ) { hdrs.append(name, val); }
         }
     }
-    let mut send = respond.send_response(h2_resp, false)
-        .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+    let mut send = respond.send_response(h2_resp, false).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
     stream_h1_body_to_h2(&mut ur, &mut send, framing).await?;
-    send.send_data(Bytes::new(), true)
-        .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+    send.send_data(Bytes::new(), true).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
     Ok(())
 }
 
 async fn send_h2_body(
-    respond: &mut h2::server::SendResponse<Bytes>,
-    status: u16,
-    content_type: &str,
-    body: &[u8],
+    respond: &mut h2::server::SendResponse<Bytes>, status: u16,
+    content_type: &str, body: &[u8],
 ) -> io::Result<()> {
     let resp = Response::builder()
         .status(status)
         .header("content-type", content_type)
         .header("content-length", body.len())
-        .body(())
-        .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
-    let mut send = respond.send_response(resp, body.is_empty())
-        .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+        .body(()).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+    let mut send = respond.send_response(resp, body.is_empty()).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
     if !body.is_empty() {
-        send.send_data(Bytes::copy_from_slice(body), true)
-            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+        send.send_data(Bytes::copy_from_slice(body), true).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
     }
     Ok(())
 }
 
 async fn stream_h1_body_to_h2<R>(
     r: &mut R, send: &mut h2::SendStream<Bytes>, framing: Framing,
-) -> io::Result<()>
-where R: AsyncBufReadExt + Unpin {
+) -> io::Result<()> where R: AsyncBufReadExt + Unpin {
     let mut buf = [0u8; 16 * 1024];
     match framing {
         Framing::None => Ok(()),
@@ -1100,8 +1169,7 @@ async fn h2_send(send: &mut h2::SendStream<Bytes>, data: &[u8]) -> io::Result<()
         };
         if cap == 0 { continue; }
         let n = data.len().min(cap);
-        send.send_data(Bytes::copy_from_slice(&data[..n]), false)
-            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+        send.send_data(Bytes::copy_from_slice(&data[..n]), false).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
         data = &data[n..];
     }
     Ok(())
@@ -1121,12 +1189,20 @@ struct ParsedRequest {
 }
 
 impl ParsedRequest {
-    fn headers_ua(&self) -> String {
-        String::new()   // заполняется ниже в parse_request через поле
-    }
     fn full_target(&self) -> String {
         if self.query.is_empty() { self.path.clone() }
         else { format!("{}?{}", self.path, self.query) }
+    }
+    fn headers_ua_from_raw(&self, raw: &[u8]) -> String {
+        let mut headers = [httparse::EMPTY_HEADER; 96];
+        let mut req = httparse::Request::new(&mut headers);
+        if req.parse(raw).is_err() { return String::new(); }
+        for h in req.headers.iter() {
+            if h.name.eq_ignore_ascii_case("user-agent") {
+                return String::from_utf8_lossy(h.value).to_string();
+            }
+        }
+        String::new()
     }
 }
 
@@ -1152,17 +1228,11 @@ fn parse_request(raw: &[u8]) -> io::Result<ParsedRequest> {
     for h in req.headers.iter() {
         let n = h.name;
         let v = std::str::from_utf8(h.value).unwrap_or("");
-        if n.eq_ignore_ascii_case("content-length") {
-            cl = v.trim().parse().ok();
-        } else if n.eq_ignore_ascii_case("transfer-encoding") {
-            if v.to_ascii_lowercase().contains("chunked") { chunked = true; }
-        } else if n.eq_ignore_ascii_case("connection") {
-            if v.to_ascii_lowercase().contains("close") { connection_close = true; }
-        }
+        if n.eq_ignore_ascii_case("content-length") { cl = v.trim().parse().ok(); }
+        else if n.eq_ignore_ascii_case("transfer-encoding") { if v.to_ascii_lowercase().contains("chunked") { chunked = true; } }
+        else if n.eq_ignore_ascii_case("connection") { if v.to_ascii_lowercase().contains("close") { connection_close = true; } }
     }
-    if chunked && cl.is_some() {
-        return Err(io::Error::new(io::ErrorKind::InvalidData, "CL+TE"));
-    }
+    if chunked && cl.is_some() { return Err(io::Error::new(io::ErrorKind::InvalidData, "CL+TE")); }
     let framing = if chunked { Framing::Chunked } else {
         match cl { Some(0) | None => Framing::None, Some(n) => Framing::ContentLength(n) }
     };
@@ -1200,25 +1270,15 @@ fn parse_response(raw: &[u8]) -> io::Result<ParsedResponse> {
 
 fn response_framing(resp: &ParsedResponse, method: &str) -> Framing {
     if method.eq_ignore_ascii_case("HEAD") { return Framing::None; }
-    if resp.code == 204 || resp.code == 304 || (100..200).contains(&resp.code) {
-        return Framing::None;
-    }
+    if resp.code == 204 || resp.code == 304 || (100..200).contains(&resp.code) { return Framing::None; }
     let mut cl: Option<usize> = None;
     let mut chunked = false;
     for (n, v) in &resp.headers {
-        if n.eq_ignore_ascii_case("content-length") {
-            cl = v.trim().parse().ok();
-        } else if n.eq_ignore_ascii_case("transfer-encoding")
-            && v.to_ascii_lowercase().contains("chunked") {
-            chunked = true;
-        }
+        if n.eq_ignore_ascii_case("content-length") { cl = v.trim().parse().ok(); }
+        else if n.eq_ignore_ascii_case("transfer-encoding") && v.to_ascii_lowercase().contains("chunked") { chunked = true; }
     }
     if chunked { Framing::Chunked } else {
-        match cl {
-            Some(0) => Framing::None,
-            Some(n) => Framing::ContentLength(n),
-            None => Framing::UntilClose,
-        }
+        match cl { Some(0) => Framing::None, Some(n) => Framing::ContentLength(n), None => Framing::UntilClose }
     }
 }
 
@@ -1228,10 +1288,6 @@ fn is_hop_by_hop(name: &str) -> bool {
         "connection" | "keep-alive" | "proxy-authenticate" | "proxy-authorization"
         | "proxy-connection" | "te" | "trailer" | "upgrade")
 }
-
-// ============================================================
-//  FORWARD / RESPONSE BUILDERS
-// ============================================================
 
 fn build_forward_request(req: &ParsedRequest, peer: SocketAddr, original_raw: &[u8]) -> Vec<u8> {
     let mut headers = [httparse::EMPTY_HEADER; 96];
@@ -1254,6 +1310,9 @@ fn build_forward_request(req: &ParsedRequest, peer: SocketAddr, original_raw: &[
 
     let mut had_xff = false;
     let mut had_xri = false;
+    let mut had_host = false;
+    let mut host_value = String::new();
+
     for h in hreq.headers.iter() {
         let n = h.name;
         let v = h.value;
@@ -1262,6 +1321,10 @@ fn build_forward_request(req: &ParsedRequest, peer: SocketAddr, original_raw: &[
             "connection" | "keep-alive" | "proxy-authenticate" | "proxy-authorization"
             | "proxy-connection" | "te" | "trailer" | "upgrade") {
             continue;
+        }
+        if n.eq_ignore_ascii_case("host") {
+            host_value = String::from_utf8_lossy(v).to_string();
+            had_host = true;
         }
         if n.eq_ignore_ascii_case("x-forwarded-for") {
             out.extend_from_slice(b"X-Forwarded-For: ");
@@ -1294,7 +1357,13 @@ fn build_forward_request(req: &ParsedRequest, peer: SocketAddr, original_raw: &[
         out.extend_from_slice(peer.ip().to_string().as_bytes());
         out.extend_from_slice(b"\r\n");
     }
-    out.extend_from_slice(b"X-Forwarded-Proto: http\r\nConnection: keep-alive\r\n\r\n");
+    out.extend_from_slice(b"X-Forwarded-Proto: http\r\n");
+    if had_host {
+        out.extend_from_slice(b"X-Forwarded-Host: ");
+        out.extend_from_slice(host_value.as_bytes());
+        out.extend_from_slice(b"\r\n");
+    }
+    out.extend_from_slice(b"Connection: keep-alive\r\n\r\n");
     out
 }
 
@@ -1305,9 +1374,7 @@ fn build_response_head(resp: &ParsedResponse, close: bool) -> Vec<u8> {
         let ln = n.to_ascii_lowercase();
         if matches!(ln.as_str(),
             "connection" | "keep-alive" | "proxy-authenticate" | "proxy-authorization"
-            | "proxy-connection" | "te" | "trailer" | "upgrade") {
-            continue;
-        }
+            | "proxy-connection" | "te" | "trailer" | "upgrade") { continue; }
         out.extend_from_slice(n.as_bytes());
         out.extend_from_slice(b": ");
         out.extend_from_slice(v.as_bytes());
@@ -1317,10 +1384,6 @@ fn build_response_head(resp: &ParsedResponse, close: bool) -> Vec<u8> {
     out.extend_from_slice(b"\r\n");
     out
 }
-
-// ============================================================
-//  READ / FORWARD BODIES
-// ============================================================
 
 async fn read_header_block<R: AsyncBufReadExt + Unpin>(r: &mut R) -> io::Result<Option<Vec<u8>>> {
     let mut buf = Vec::with_capacity(2048);
@@ -1428,9 +1491,7 @@ async fn read_body_bounded<R: AsyncBufReadExt + Unpin>(
                     if t == b"\r\n" || t == b"\n" { return Ok(out); }
                 }
             }
-            if out.len() + size > max {
-                return Err(io::Error::new(io::ErrorKind::InvalidData, "too large"));
-            }
+            if out.len() + size > max { return Err(io::Error::new(io::ErrorKind::InvalidData, "too large")); }
             let mut rem = size;
             while rem > 0 {
                 let want = rem.min(buf.len());
