@@ -2,4 +2,4 @@
 *.pdb
 *.exe
 .env
-banditx.yaml.local
+banditx.yaml.localaccess.log
