@@ -1,6 +1,7 @@
 server:
   listen: "127.0.0.1:8080"
   tls_listen: "127.0.0.1:8443"
+  access_log: "access.log"
 
 routes:
   - prefix: "/php/"
@@ -8,10 +9,6 @@ routes:
     kind: fastcgi
     doc_root: "C:/php/www"
 
-  - prefix: "/api/"
-    upstream: "127.0.0.1:9000"
-    kind: fastcgi
-    doc_root: "C:/php/www"
-
   - prefix: "/"
     upstream: "127.0.0.1:8000"
+    upstream: "127.0.0.1:9999"
