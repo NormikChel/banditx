@@ -1,0 +1,16 @@
+[package]
+name = "banditx"
+version = "0.0.5"
+edition = "2021"
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+httparse = "1.9"
+serde = { version = "1", features = ["derive"] }
+serde_yaml = "0.9"
+tokio-rustls = { version = "0.26", default-features = false, features = ["ring"] }
+rcgen = "0.13"
+h2 = "0.4"
+http = "1"
+bytes = "1"
+futures-util = "0.3"
