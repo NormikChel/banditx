@@ -947,7 +947,7 @@ where R: AsyncBufReadExt + Unpin, W: AsyncWriteExt + Unpin {
     let add = |k: &str, v: &str, out: &mut Vec<u8>| fcgi_encode_nv(out, k.as_bytes(), v.as_bytes());
 
     add("GATEWAY_INTERFACE", "CGI/1.1", &mut params);
-    add("SERVER_SOFTWARE", "banditx/0.3.2", &mut params);
+    add("SERVER_SOFTWARE", "banditx/0.3.4", &mut params);
     add("SERVER_PROTOCOL", "HTTP/1.1", &mut params);
     add("REQUEST_METHOD", &parsed.method, &mut params);
     let uri = if parsed.query.is_empty() { parsed.path.clone() }
@@ -1048,7 +1048,39 @@ where R: AsyncBufReadExt + Unpin, W: AsyncWriteExt + Unpin {
         if is_hop_by_hop(&n) { continue; }
         http_headers.push((n, v));
     }
-    http_headers.push(("Content-Length".to_string(), cgi_body.len().to_string()));
+
+    // ---- gzip ----
+    let client_gzip = client_accepts_gzip(req_raw);
+    let content_type = http_headers.iter()
+        .find(|(n, _)| n.eq_ignore_ascii_case("content-type"))
+        .map(|(_, v)| v.as_str())
+        .unwrap_or("");
+    let already_encoded = http_headers.iter()
+        .any(|(n, _)| n.eq_ignore_ascii_case("content-encoding"));
+
+    let can_gzip = client_gzip
+        && !already_encoded
+        && cgi_body.len() >= GZIP_MIN
+        && cgi_body.len() <= GZIP_MAX
+        && is_compressible(content_type);
+
+    let final_body: Vec<u8> = if can_gzip {
+        match gzip_compress(&cgi_body) {
+            Ok(c) if c.len() < cgi_body.len() => {
+                http_headers.push(("Content-Encoding".into(), "gzip".into()));
+                c
+            }
+            _ => cgi_body.clone(),
+        }
+    } else {
+        cgi_body.clone()
+    };
+
+    // Всегда добавляем Vary, если клиент мог попросить gzip
+    if !http_headers.iter().any(|(n, _)| n.eq_ignore_ascii_case("vary")) {
+        http_headers.push(("Vary".into(), "Accept-Encoding".into()));
+    }
+    http_headers.push(("Content-Length".into(), final_body.len().to_string()));
 
     let mut out = format!("HTTP/1.1 {}\r\n", status_line);
     for (n, v) in &http_headers {
@@ -1057,9 +1089,9 @@ where R: AsyncBufReadExt + Unpin, W: AsyncWriteExt + Unpin {
     out.push_str(if parsed.connection_close { "Connection: close\r\n" } else { "Connection: keep-alive\r\n" });
     out.push_str("\r\n");
     cw.write_all(out.as_bytes()).await?;
-    cw.write_all(&cgi_body).await?;
+    cw.write_all(&final_body).await?;
 
-    Ok((status_code, cgi_body.len() as u64, !parsed.connection_close))
+    Ok((status_code, final_body.len() as u64, !parsed.connection_close))
 }
 
 fn split_cgi_response(raw: &[u8]) -> (Vec<(String, String)>, Vec<u8>) {
@@ -1373,14 +1405,25 @@ async fn proxy_fastcgi_h2(
     let path = req.uri().path().to_string();
     let query = req.uri().query().unwrap_or("").to_string();
 
-    // 1. Собираем заголовки ДО into_body (иначе req уедет)
+    // Accept-Encoding — до into_body
+    let client_gzip = req.headers()
+        .get("accept-encoding")
+        .and_then(|v| v.to_str().ok())
+        .map(|v| {
+            let v = v.to_ascii_lowercase();
+            v.split(',').any(|t| {
+                let t = t.trim();
+                t == "gzip" || t.starts_with("gzip;")
+            })
+        })
+        .unwrap_or(false);
+
     let headers: Vec<(String, String)> = req.headers().iter()
         .filter(|(n, _)| !n.as_str().starts_with(':'))
         .map(|(n, v)| (n.as_str().to_string(), v.to_str().unwrap_or("").to_string()))
         .collect();
     let authority = req.uri().authority().map(|a| a.as_str().to_string());
 
-    // 2. Читаем тело (для FastCGI нужен CONTENT_LENGTH)
     let mut body = Vec::new();
     let mut stream = req.into_body();
     while let Some(chunk) = stream.data().await {
@@ -1393,7 +1436,6 @@ async fn proxy_fastcgi_h2(
         body.extend_from_slice(&chunk);
     }
 
-    // 3. Пул FastCGI
     let pool = app.pools.fcgi(&upstream.addr);
     let mut up = match pool.get(&app.metrics).await {
         Ok(s) => s,
@@ -1406,7 +1448,6 @@ async fn proxy_fastcgi_h2(
         }
     };
 
-    // 4. PARAMS
     let doc_root = route.doc_root.as_deref().unwrap_or("/");
     let script_filename = format!("{}{}", doc_root.trim_end_matches('/'), path);
 
@@ -1414,7 +1455,7 @@ async fn proxy_fastcgi_h2(
     let add = |k: &str, v: &str, out: &mut Vec<u8>| fcgi_encode_nv(out, k.as_bytes(), v.as_bytes());
 
     add("GATEWAY_INTERFACE", "CGI/1.1", &mut params);
-    add("SERVER_SOFTWARE", "banditx/0.3.3", &mut params);
+    add("SERVER_SOFTWARE", "banditx/0.3.4", &mut params);
     add("SERVER_PROTOCOL", "HTTP/2", &mut params);
     add("REQUEST_METHOD", &method, &mut params);
     let uri = if query.is_empty() { path.clone() } else { format!("{}?{}", path, query) };
@@ -1443,7 +1484,6 @@ async fn proxy_fastcgi_h2(
         }
     }
 
-    // 5. BEGIN_REQUEST + PARAMS + STDIN
     let req_id: u16 = 1;
     let mut begin = Vec::with_capacity(8);
     begin.extend_from_slice(&FCGI_RESPONDER.to_be_bytes());
@@ -1473,7 +1513,6 @@ async fn proxy_fastcgi_h2(
     up.write_all(&b).await?;
     up.flush().await.ok();
 
-    // 6. Читаем ответ
     let mut stdout = Vec::new();
     let mut pool_ok = true;
     let read_result: io::Result<()> = async {
@@ -1503,7 +1542,6 @@ async fn proxy_fastcgi_h2(
     }
     if pool_ok { pool.put(up); }
 
-    // 7. CGI → h2
     let (cgi_headers, cgi_body) = split_cgi_response(&stdout);
     let mut status_code: u16 = 200;
     let mut h2_headers: Vec<(String, String)> = Vec::new();
@@ -1520,6 +1558,36 @@ async fn proxy_fastcgi_h2(
         h2_headers.push((n, v));
     }
 
+    // ---- gzip ----
+    let content_type = h2_headers.iter()
+        .find(|(n, _)| n.eq_ignore_ascii_case("content-type"))
+        .map(|(_, v)| v.as_str())
+        .unwrap_or("");
+    let already_encoded = h2_headers.iter()
+        .any(|(n, _)| n.eq_ignore_ascii_case("content-encoding"));
+
+    let can_gzip = client_gzip
+        && !already_encoded
+        && cgi_body.len() >= GZIP_MIN
+        && cgi_body.len() <= GZIP_MAX
+        && is_compressible(content_type);
+
+    let final_body: Vec<u8> = if can_gzip {
+        match gzip_compress(&cgi_body) {
+            Ok(c) if c.len() < cgi_body.len() => {
+                h2_headers.push(("content-encoding".into(), "gzip".into()));
+                c
+            }
+            _ => cgi_body.clone(),
+        }
+    } else {
+        cgi_body.clone()
+    };
+
+    if !h2_headers.iter().any(|(n, _)| n.eq_ignore_ascii_case("vary")) {
+        h2_headers.push(("vary".into(), "accept-encoding".into()));
+    }
+
     let mut h2_resp = Response::builder().status(status_code).body(())
         .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
     {
@@ -1532,20 +1600,20 @@ async fn proxy_fastcgi_h2(
         }
         hdrs.insert(
             http::header::CONTENT_LENGTH,
-            HeaderValue::from(cgi_body.len()),
+            HeaderValue::from(final_body.len()),
         );
     }
 
-    let end_stream = cgi_body.is_empty();
+    let end_stream = final_body.is_empty();
     let mut send = respond.send_response(h2_resp, end_stream)
         .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
     if !end_stream {
-        h2_send(&mut send, &cgi_body).await?;
+        h2_send(&mut send, &final_body).await?;
         send.send_data(Bytes::new(), true)
             .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
     }
 
-    Ok((status_code, cgi_body.len() as u64))
+    Ok((status_code, final_body.len() as u64))
 }
 
 async fn send_h2_body(
