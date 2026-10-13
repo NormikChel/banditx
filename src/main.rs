@@ -39,7 +39,7 @@ const FCGI_IDLE_MAX: usize = 64;
 const HEALTH_INTERVAL: Duration = Duration::from_secs(3);
 const HEALTH_TIMEOUT: Duration = Duration::from_secs(1);
 const HEALTH_FAIL_THRESHOLD: u32 = 2;
-const GZIP_MIN: usize = 512;
+const GZIP_MIN: usize = 256;
 const GZIP_MAX: usize = 4 * 1024 * 1024;
 
 const FCGI_VERSION_1: u8 = 1;
@@ -615,7 +615,7 @@ async fn main() -> io::Result<()> {
         balancers,
     });
 
-    println!("banditx v0.3.3 | http://{} | {} route(s)",
+    println!("banditx v0.3.4 | http://{} | {} route(s)",
              cfg.server.listen, cfg.routes.len());
 
     spawn_config_watcher(app.clone());
