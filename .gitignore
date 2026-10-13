@@ -4,3 +4,7 @@
 .env
 banditx.yaml.local
 access.log
+site/node_modules/
+site/.next/
+site/out/
+site/.env*.local
