@@ -1,0 +1,6 @@
+/target
+*.pdb
+*.exe
+.env
+banditx.yaml.local
+access.log
