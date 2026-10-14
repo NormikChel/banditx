@@ -1,0 +1,61 @@
+1:"$Sreact.fragment"
+2:"/_next/static/chunks/2gkogrwrpk2g8.js"
+3:I[89192,["$2"],"default"]
+4:I[39756,["$2"],"default"]
+5:I[37457,["$2"],"default"]
+6:I[30023,["$2"],"default"]
+2e:"ViewportBoundary"
+2f:I[97367,["$2"],"$2e"]
+30:"MetadataBoundary"
+31:I[97367,["$2"],"$30"]
+32:"$Sreact.suspense"
+33:I[27201,["$2"],"IconMark"]
+:HL["/_next/static/chunks/3p75loxv01r61.css","style"]
+8:X
+d:X
+d:C
+10:[["children",{"s":"__PAGE__","h":160,"d":{"r":["$","$1","c",{"children":[["$","main",null,{"className":"page","children":[["$","header",null,{"className":"page-head","children":[["$","h1",null,{"children":"Compare"}],["$","p",null,{"children":"banditx vs nginx vs caddy — across the features you actually need in production."}]]}],["$","div",null,{"className":"compare","children":[[["$","div","0",{"children":""}],["$","div","1",{"children":"banditx"}],["$","div","2",{"children":"nginx"}],["$","div","3",{"children":"caddy"}]],[["$","div","Language-f",{"children":"Language"}],["$","div","Language0",{"className":"","children":"Rust"}],["$","div","Language1",{"className":"","children":"C"}],["$","div","Language2",{"className":"","children":"Go"}],["$","div","Single binary-f",{"children":"Single binary"}],["$","div","Single binary0",{"className":"yes","children":"✓"}],["$","div","Single binary1",{"className":"no","children":"—"}],["$","div","Single binary2",{"className":"yes","children":"✓"}],["$","div","HTTP/2-f",{"children":"HTTP/2"}],["$","div","HTTP/20",{"className":"yes","children":"✓"}],["$","div","HTTP/21",{"className":"yes","children":"✓"}],["$","div","HTTP/22",{"className":"yes","children":"✓"}],["$","div","HTTP/3 / QUIC-f",{"children":"HTTP/3 / QUIC"}],["$","div","HTTP/3 / QUIC0",{"className":"no","children":"—"}],["$","div","HTTP/3 / QUIC1",{"className":"partial","children":"~"}],["$","div","HTTP/3 / QUIC2",{"className":"yes","children":"✓"}],["$","div","FastCGI-f",{"children":"FastCGI"}],["$","div","FastCGI0",{"className":"yes","children":"✓"}],["$","div","FastCGI1",{"className":"yes","children":"✓"}],["$","div","FastCGI2",{"className":"no","children":"—"}],["$","div","WebSocket-f",{"children":"WebSocket"}],["$","div","WebSocket0",{"className":"yes","children":"✓"}],["$","div","WebSocket1",{"className":"yes","children":"✓"}],["$","div","WebSocket2",{"className":"yes","children":"✓"}],["$","div","ACME / Let's Encrypt-f",{"children":"ACME / Let's Encrypt"}],["$","div","ACME / Let's Encrypt0",{"className":"yes","children":"✓"}],"$L11","$L12","$L13","$L14","$L15","$L16","$L17","$L18","$L19","$L1a","$L1b","$L1c","$L1d","$L1e","$L1f","$L20","$L21","$L22","$L23","$L24","$L25","$L26","$L27","$L28","$L29","$L2a"]]}],"$L2b"]}],null,"$L2c"]}],"p":"$@2d","v":null,"s":"$8"}}]]
+e:[["children",{"s":"compare","h":96,"d":{"r":["$","$1","c",{"children":[null,["$","$L4",null,{"parallelRouterKey":"children","template":["$","$L5",null,{}]}]]}],"p":"$@f","v":"$d","s":"$8"},"c":"$Q10"}]]
+b:[["children",{"s":"en","h":96,"d":{"r":["$","$1","c",{"children":[null,["$","$L4",null,{"parallelRouterKey":"children","template":["$","$L5",null,{}]}]]}],"p":"$@c","v":"$d","s":"$8"},"c":"$Qe"}]]
+9:[["children",{"s":"(en)","h":96,"d":{"r":["$","$1","c",{"children":[null,["$","$L4",null,{"parallelRouterKey":"children","template":["$","$L5",null,{}],"notFound":[[["$","title",null,{"children":"404: This page could not be found."}],["$","div",null,{"style":"$0:t:t:d:r:props:children:1:props:children:props:children:1:props:children:props:notFound:0:1:props:style","children":["$","div",null,{"children":[["$","style",null,{"dangerouslySetInnerHTML":{"__html":"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}"}}],["$","h1",null,{"className":"next-error-h1","style":"$0:t:t:d:r:props:children:1:props:children:props:children:1:props:children:props:notFound:0:1:props:children:props:children:1:props:style","children":404}],["$","div",null,{"style":"$0:t:t:d:r:props:children:1:props:children:props:children:1:props:children:props:notFound:0:1:props:children:props:children:2:props:style","children":["$","h2",null,{"style":"$0:t:t:d:r:props:children:1:props:children:props:children:1:props:children:props:notFound:0:1:props:children:props:children:2:props:children:props:style","children":"This page could not be found."}]}]]}]}]],[]]}]]}],"p":"$@a","v":null,"s":"$8"},"c":"$Qb"}]]
+0:{"t":{"t":{"s":"","h":80,"d":{"r":["$","$1","c",{"children":[[["$","link","0",{"rel":"stylesheet","href":"/_next/static/chunks/3p75loxv01r61.css","precedence":"next"}],["$","script","script-0",{"src":"/_next/static/chunks/2gkogrwrpk2g8.js","async":true}]],["$","html",null,{"lang":"ru","suppressHydrationWarning":true,"children":["$","body",null,{"children":[["$","$L3",null,{}],["$","div",null,{"id":"main-content","children":["$","$L4",null,{"parallelRouterKey":"children","template":["$","$L5",null,{}],"notFound":[[["$","title",null,{"children":"404: This page could not be found."}],["$","div",null,{"style":{"fontFamily":"system-ui,\"Segoe UI\",Roboto,Helvetica,Arial,sans-serif,\"Apple Color Emoji\",\"Segoe UI Emoji\"","height":"100vh","textAlign":"center","display":"flex","flexDirection":"column","alignItems":"center","justifyContent":"center"},"children":["$","div",null,{"children":[["$","style",null,{"dangerouslySetInnerHTML":{"__html":"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}"}}],["$","h1",null,{"className":"next-error-h1","style":{"display":"inline-block","margin":"0 20px 0 0","padding":"0 23px 0 0","fontSize":24,"fontWeight":500,"verticalAlign":"top","lineHeight":"49px"},"children":404}],["$","div",null,{"style":{"display":"inline-block"},"children":["$","h2",null,{"style":{"fontSize":14,"fontWeight":400,"lineHeight":"49px","margin":0},"children":"This page could not be found."}]}]]}]}]],[]]}]}],["$","$L6",null,{}]]}]}]]}],"p":"$@7","v":null,"s":"$8"},"c":"$Q9"},"h":{"r":["$","$1","h",{"children":[null,["$","$L2f",null,{"children":[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]}],["$","$L31",null,{"children":[["$","div",null,{"hidden":true,"children":["$","$32",null,{"name":"Next.Metadata","children":[["$","title","0",{"children":"Compare with nginx and caddy — banditx"}],["$","meta","1",{"name":"description","content":"HTTP/1.1, HTTP/2, FastCGI. Reverse proxy, load balancer, health checks, Prometheus metrics — один бинарник без зависимостей."}],["$","link","2",{"rel":"icon","href":"/favicon.ico?favicon.117ezoe8m31dk.ico","sizes":"48x48","type":"image/x-icon"}],["$","$L33","3",{}]]}]}],null]}],null]}],"p":"$@34","v":null,"s":"$8"}},"a":"$@35","u":"$@36","b":"LH-WyhzpSPn8kYF5Qr-hB"}
+37:I[97367,["$2"],"OutletBoundary"]
+11:["$","div","ACME / Let's Encrypt1",{"className":"no","children":"—"}]
+12:["$","div","ACME / Let's Encrypt2",{"className":"yes","children":"✓"}]
+13:["$","div","Hot reload-f",{"children":"Hot reload"}]
+14:["$","div","Hot reload0",{"className":"yes","children":"✓"}]
+15:["$","div","Hot reload1",{"className":"yes","children":"✓"}]
+16:["$","div","Hot reload2",{"className":"yes","children":"✓"}]
+17:["$","div","Prometheus metrics-f",{"children":"Prometheus metrics"}]
+18:["$","div","Prometheus metrics0",{"className":"yes","children":"✓"}]
+19:["$","div","Prometheus metrics1",{"className":"partial","children":"~"}]
+1a:["$","div","Prometheus metrics2",{"className":"yes","children":"✓"}]
+1b:["$","div","YAML config-f",{"children":"YAML config"}]
+1c:["$","div","YAML config0",{"className":"yes","children":"✓"}]
+1d:["$","div","YAML config1",{"className":"no","children":"—"}]
+1e:["$","div","YAML config2",{"className":"no","children":"—"}]
+1f:["$","div","Reload without restart-f",{"children":"Reload without restart"}]
+20:["$","div","Reload without restart0",{"className":"yes","children":"✓"}]
+21:["$","div","Reload without restart1",{"className":"no","children":"—"}]
+22:["$","div","Reload without restart2",{"className":"partial","children":"~"}]
+23:["$","div","Rate limiting-f",{"children":"Rate limiting"}]
+24:["$","div","Rate limiting0",{"className":"yes","children":"✓"}]
+25:["$","div","Rate limiting1",{"className":"partial","children":"~"}]
+26:["$","div","Rate limiting2",{"className":"yes","children":"✓"}]
+27:["$","div","RAM (idle)-f",{"children":"RAM (idle)"}]
+28:["$","div","RAM (idle)0",{"className":"","children":"34 MB"}]
+29:["$","div","RAM (idle)1",{"className":"","children":"48 MB"}]
+2a:["$","div","RAM (idle)2",{"className":"","children":"62 MB"}]
+2b:["$","p",null,{"className":"note","children":"✓ — built-in. ~ — partial or via plugin. — — none. If something changed — send a PR."}]
+2c:["$","$L37",null,{"children":["$","$32",null,{"name":"Next.MetadataOutlet","children":"$@38"}]}]
+8:300
+38:null
+36:true
+8:C
+35:0
+f:"$undefined"
+c:"$undefined"
+a:"$undefined"
+7:"$undefined"
+34:"$undefined"
+2d:"$undefined"
