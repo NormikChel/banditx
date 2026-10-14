@@ -1,6 +1,6 @@
-:HL["/_next/static/chunks/3p75loxv01r61.css","style"]
+:HL["/_next/static/chunks/0pkffj-apyg5q.css","style"]
 4:[["children",{"s":"__PAGE__","h":160}]]
 3:[["children",{"s":{"n":"slug","t":"d","k":"architecture","s":[]},"h":96,"c":"$Q4"}]]
 2:[["children",{"s":"docs","h":96,"c":"$Q3"}]]
 1:[["children",{"s":"(ru)","h":112,"c":"$Q2"}]]
-0:{"b":"50W1_YcMnH5gzkRbx8O5Z","t":{"t":{"s":"","h":80,"c":"$Q1"}}}
+0:{"b":"ZMHZ9zcmVOjaXToJIv6sf","t":{"t":{"s":"","h":80,"c":"$Q1"}}}
