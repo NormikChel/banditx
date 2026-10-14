@@ -1,34 +1,35 @@
 1:"$Sreact.fragment"
-2:"/_next/static/chunks/2gkogrwrpk2g8.js"
-3:I[89192,["$2"],"default"]
-4:I[39756,["$2"],"default"]
-5:I[37457,["$2"],"default"]
-6:I[30023,["$2"],"default"]
-11:I[22016,["$2"],""]
-12:I[97367,["$2"],"OutletBoundary"]
-13:"$Sreact.suspense"
-16:"ViewportBoundary"
-17:I[97367,["$2"],"$16"]
-18:"MetadataBoundary"
-19:I[97367,["$2"],"$18"]
-1a:I[27201,["$2"],"IconMark"]
+2:"/_next/static/chunks/0umf92h1sb77c.js"
+3:I[39756,["$2"],"default"]
+4:I[37457,["$2"],"default"]
+9:"/_next/static/chunks/1ywf7zs-0sew6.js"
+a:I[89192,["$9"],"default"]
+b:I[30023,["$9"],"default"]
+12:I[22016,["$9"],""]
+13:I[97367,["$2"],"OutletBoundary"]
+14:"$Sreact.suspense"
+17:"ViewportBoundary"
+18:I[97367,["$2"],"$17"]
+19:"MetadataBoundary"
+1a:I[97367,["$2"],"$19"]
+1b:I[27201,["$2"],"IconMark"]
 :HL["/_next/static/chunks/3p75loxv01r61.css","style"]
-8:X
-d:X
-d:C
-10:[["children",{"s":"__PAGE__","h":160,"d":{"r":["$","$1","c",{"children":[["$","main",null,{"className":"page","children":[["$","header",null,{"className":"page-head","children":[["$","h1",null,{"children":"Docs"}],["$","p",null,{"children":"Everything you need to run and configure banditx."}]]}],["$","div",null,{"className":"doc-index","children":[["$","$L11","installation",{"href":"/en/docs/installation/","children":[["$","strong",null,{"children":"Installation"}],["$","span",null,{"children":"Binary, Docker, systemd unit."}]]}],["$","$L11","configuration",{"href":"/en/docs/configuration/","children":[["$","strong",null,{"children":"Configuration"}],["$","span",null,{"children":"Structure of banditx.yaml, schemas, examples."}]]}],["$","$L11","routing",{"href":"/en/docs/routing/","children":[["$","strong",null,{"children":"Routing"}],["$","span",null,{"children":"host, path, headers, redirects, rate limit."}]]}],["$","$L11","tls",{"href":"/en/docs/tls/","children":[["$","strong",null,{"children":"TLS / ACME"}],["$","span",null,{"children":"BYO certs or automatic Let's Encrypt."}]]}],["$","$L11","balancing",{"href":"/en/docs/balancing/","children":[["$","strong",null,{"children":"Load balancing"}],["$","span",null,{"children":"Strategies, sticky sessions, weights."}]]}],["$","$L11","metrics",{"href":"/en/docs/metrics/","children":[["$","strong",null,{"children":"Metrics"}],["$","span",null,{"children":"Prometheus, dashboards, alerts."}]]}]]}]]}],null,["$","$L12",null,{"children":["$","$13",null,{"name":"Next.MetadataOutlet","children":"$@14"}]}]]}],"p":"$@15","v":null,"s":"$8"}}]]
-e:[["children",{"s":"docs","h":96,"d":{"r":["$","$1","c",{"children":[null,["$","$L4",null,{"parallelRouterKey":"children","template":["$","$L5",null,{}]}]]}],"p":"$@f","v":"$d","s":"$8"},"c":"$Q10"}]]
-b:[["children",{"s":"en","h":96,"d":{"r":["$","$1","c",{"children":[null,["$","$L4",null,{"parallelRouterKey":"children","template":["$","$L5",null,{}]}]]}],"p":"$@c","v":"$d","s":"$8"},"c":"$Qe"}]]
-9:[["children",{"s":"(en)","h":96,"d":{"r":["$","$1","c",{"children":[null,["$","$L4",null,{"parallelRouterKey":"children","template":["$","$L5",null,{}],"notFound":[[["$","title",null,{"children":"404: This page could not be found."}],["$","div",null,{"style":"$0:t:t:d:r:props:children:1:props:children:props:children:1:props:children:props:notFound:0:1:props:style","children":["$","div",null,{"children":[["$","style",null,{"dangerouslySetInnerHTML":{"__html":"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}"}}],["$","h1",null,{"className":"next-error-h1","style":"$0:t:t:d:r:props:children:1:props:children:props:children:1:props:children:props:notFound:0:1:props:children:props:children:1:props:style","children":404}],["$","div",null,{"style":"$0:t:t:d:r:props:children:1:props:children:props:children:1:props:children:props:notFound:0:1:props:children:props:children:2:props:style","children":["$","h2",null,{"style":"$0:t:t:d:r:props:children:1:props:children:props:children:1:props:children:props:notFound:0:1:props:children:props:children:2:props:children:props:style","children":"This page could not be found."}]}]]}]}]],[]]}]]}],"p":"$@a","v":null,"s":"$8"},"c":"$Qb"}]]
-0:{"t":{"t":{"s":"","h":80,"d":{"r":["$","$1","c",{"children":[[["$","link","0",{"rel":"stylesheet","href":"/_next/static/chunks/3p75loxv01r61.css","precedence":"next"}],["$","script","script-0",{"src":"/_next/static/chunks/2gkogrwrpk2g8.js","async":true}]],["$","html",null,{"lang":"ru","suppressHydrationWarning":true,"children":["$","body",null,{"children":[["$","$L3",null,{}],["$","div",null,{"id":"main-content","children":["$","$L4",null,{"parallelRouterKey":"children","template":["$","$L5",null,{}],"notFound":[[["$","title",null,{"children":"404: This page could not be found."}],["$","div",null,{"style":{"fontFamily":"system-ui,\"Segoe UI\",Roboto,Helvetica,Arial,sans-serif,\"Apple Color Emoji\",\"Segoe UI Emoji\"","height":"100vh","textAlign":"center","display":"flex","flexDirection":"column","alignItems":"center","justifyContent":"center"},"children":["$","div",null,{"children":[["$","style",null,{"dangerouslySetInnerHTML":{"__html":"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}"}}],["$","h1",null,{"className":"next-error-h1","style":{"display":"inline-block","margin":"0 20px 0 0","padding":"0 23px 0 0","fontSize":24,"fontWeight":500,"verticalAlign":"top","lineHeight":"49px"},"children":404}],["$","div",null,{"style":{"display":"inline-block"},"children":["$","h2",null,{"style":{"fontSize":14,"fontWeight":400,"lineHeight":"49px","margin":0},"children":"This page could not be found."}]}]]}]}]],[]]}]}],["$","$L6",null,{}]]}]}]]}],"p":"$@7","v":null,"s":"$8"},"c":"$Q9"},"h":{"r":["$","$1","h",{"children":[null,["$","$L17",null,{"children":[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]}],["$","$L19",null,{"children":[["$","div",null,{"hidden":true,"children":["$","$13",null,{"name":"Next.Metadata","children":[["$","title","0",{"children":"Docs — banditx"}],["$","meta","1",{"name":"description","content":"HTTP/1.1, HTTP/2, FastCGI. Reverse proxy, load balancer, health checks, Prometheus metrics — один бинарник без зависимостей."}],["$","link","2",{"rel":"icon","href":"/favicon.ico?favicon.117ezoe8m31dk.ico","sizes":"48x48","type":"image/x-icon"}],["$","$L1a","3",{}]]}]}],null]}],null]}],"p":"$@1b","v":null,"s":"$8"}},"a":"$@1c","u":"$@1d","b":"LH-WyhzpSPn8kYF5Qr-hB"}
-14:null
-8:300
-1d:true
-8:C
-1c:0
-f:"$undefined"
+6:X
+6:C
+7:X
+11:[["children",{"s":"__PAGE__","h":160,"d":{"r":["$","$1","c",{"children":[["$","main",null,{"className":"page","children":[["$","header",null,{"className":"page-head","children":[["$","h1",null,{"children":"Docs"}],["$","p",null,{"children":"Everything you need to run and configure banditx."}]]}],["$","div",null,{"className":"doc-index","children":[["$","$L12","installation",{"href":"/en/docs/installation/","children":[["$","strong",null,{"children":"Installation"}],["$","span",null,{"children":"Binary, Docker, systemd unit."}]]}],["$","$L12","configuration",{"href":"/en/docs/configuration/","children":[["$","strong",null,{"children":"Configuration"}],["$","span",null,{"children":"Structure of banditx.yaml, schemas, examples."}]]}],["$","$L12","routing",{"href":"/en/docs/routing/","children":[["$","strong",null,{"children":"Routing"}],["$","span",null,{"children":"host, path, headers, redirects, rate limit."}]]}],["$","$L12","tls",{"href":"/en/docs/tls/","children":[["$","strong",null,{"children":"TLS / ACME"}],["$","span",null,{"children":"BYO certs or automatic Let's Encrypt."}]]}],["$","$L12","balancing",{"href":"/en/docs/balancing/","children":[["$","strong",null,{"children":"Load balancing"}],["$","span",null,{"children":"Strategies, sticky sessions, weights."}]]}],["$","$L12","metrics",{"href":"/en/docs/metrics/","children":[["$","strong",null,{"children":"Metrics"}],["$","span",null,{"children":"Prometheus, dashboards, alerts."}]]}]]}]]}],null,["$","$L13",null,{"children":["$","$14",null,{"name":"Next.MetadataOutlet","children":"$@15"}]}]]}],"p":"$@16","v":null,"s":"$7"}}]]
+f:[["children",{"s":"docs","h":96,"d":{"r":["$","$1","c",{"children":[null,["$","$L3",null,{"parallelRouterKey":"children","template":["$","$L4",null,{}]}]]}],"p":"$@10","v":"$6","s":"$7"},"c":"$Q11"}]]
+d:[["children",{"s":"en","h":96,"d":{"r":["$","$1","c",{"children":[null,["$","$L3",null,{"parallelRouterKey":"children","template":["$","$L4",null,{}]}]]}],"p":"$@e","v":"$6","s":"$7"},"c":"$Qf"}]]
+8:[["children",{"s":"(en)","h":112,"d":{"r":["$","$1","c",{"children":[[["$","link","0",{"rel":"stylesheet","href":"/_next/static/chunks/3p75loxv01r61.css","precedence":"next"}],["$","script","script-0",{"src":"/_next/static/chunks/1ywf7zs-0sew6.js","async":true}]],["$","html",null,{"lang":"en","children":["$","body",null,{"children":[["$","$La",null,{}],["$","div",null,{"id":"main-content","children":["$","$L3",null,{"parallelRouterKey":"children","template":["$","$L4",null,{}],"notFound":[[["$","title",null,{"children":"404: This page could not be found."}],["$","div",null,{"style":"$0:t:t:d:r:props:children:1:props:notFound:0:1:props:style","children":["$","div",null,{"children":[["$","style",null,{"dangerouslySetInnerHTML":{"__html":"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}"}}],["$","h1",null,{"className":"next-error-h1","style":"$0:t:t:d:r:props:children:1:props:notFound:0:1:props:children:props:children:1:props:style","children":404}],["$","div",null,{"style":"$0:t:t:d:r:props:children:1:props:notFound:0:1:props:children:props:children:2:props:style","children":["$","h2",null,{"style":"$0:t:t:d:r:props:children:1:props:notFound:0:1:props:children:props:children:2:props:children:props:style","children":"This page could not be found."}]}]]}]}]],[]]}]}],["$","$Lb",null,{}]]}]}]]}],"p":"$@c","v":null,"s":"$7"},"c":"$Qd"}]]
+0:{"t":{"t":{"s":"","h":80,"d":{"r":["$","$1","c",{"children":[null,["$","$L3",null,{"parallelRouterKey":"children","template":["$","$L4",null,{}],"notFound":[[["$","title",null,{"children":"404: This page could not be found."}],["$","div",null,{"style":{"fontFamily":"system-ui,\"Segoe UI\",Roboto,Helvetica,Arial,sans-serif,\"Apple Color Emoji\",\"Segoe UI Emoji\"","height":"100vh","textAlign":"center","display":"flex","flexDirection":"column","alignItems":"center","justifyContent":"center"},"children":["$","div",null,{"children":[["$","style",null,{"dangerouslySetInnerHTML":{"__html":"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}"}}],["$","h1",null,{"className":"next-error-h1","style":{"display":"inline-block","margin":"0 20px 0 0","padding":"0 23px 0 0","fontSize":24,"fontWeight":500,"verticalAlign":"top","lineHeight":"49px"},"children":404}],["$","div",null,{"style":{"display":"inline-block"},"children":["$","h2",null,{"style":{"fontSize":14,"fontWeight":400,"lineHeight":"49px","margin":0},"children":"This page could not be found."}]}]]}]}]],[]]}]]}],"p":"$@5","v":"$6","s":"$7"},"c":"$Q8"},"h":{"r":["$","$1","h",{"children":[null,["$","$L18",null,{"children":[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]}],["$","$L1a",null,{"children":[["$","div",null,{"hidden":true,"children":["$","$14",null,{"name":"Next.Metadata","children":[["$","title","0",{"children":"Docs — banditx"}],["$","meta","1",{"name":"description","content":"HTTP/1.1, HTTP/2, FastCGI. Reverse proxy, load balancer, health checks, Prometheus metrics — a single binary with no dependencies."}],["$","link","2",{"rel":"icon","href":"/favicon.ico?favicon.117ezoe8m31dk.ico","sizes":"48x48","type":"image/x-icon"}],["$","$L1b","3",{}]]}]}],null]}],null]}],"p":"$@1c","v":null,"s":"$7"}},"a":"$@1d","u":"$@1e","b":"50W1_YcMnH5gzkRbx8O5Z"}
+15:null
+7:300
+1e:true
+7:C
+1d:0
+10:"$undefined"
+e:"$undefined"
 c:"$undefined"
-a:"$undefined"
-7:"$undefined"
-1b:"$undefined"
-15:"$undefined"
+5:"$undefined"
+1c:"$undefined"
+16:"$undefined"

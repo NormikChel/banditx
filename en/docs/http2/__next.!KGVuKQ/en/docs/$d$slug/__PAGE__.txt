@@ -1,39 +1,40 @@
 1:"$Sreact.fragment"
-2:"/_next/static/chunks/2gkogrwrpk2g8.js"
-3:I[89192,["$2"],"default"]
-4:I[39756,["$2"],"default"]
-5:I[37457,["$2"],"default"]
-6:I[30023,["$2"],"default"]
-13:I[22016,["$2"],""]
-18:"ViewportBoundary"
-19:I[97367,["$2"],"$18"]
-1a:"MetadataBoundary"
-1b:I[97367,["$2"],"$1a"]
-1c:"$Sreact.suspense"
-1d:I[27201,["$2"],"IconMark"]
+2:"/_next/static/chunks/0umf92h1sb77c.js"
+3:I[39756,["$2"],"default"]
+4:I[37457,["$2"],"default"]
+9:"/_next/static/chunks/1ywf7zs-0sew6.js"
+a:I[89192,["$9"],"default"]
+b:I[30023,["$9"],"default"]
+14:I[22016,["$9"],""]
+19:"ViewportBoundary"
+1a:I[97367,["$2"],"$19"]
+1b:"MetadataBoundary"
+1c:I[97367,["$2"],"$1b"]
+1d:"$Sreact.suspense"
+1e:I[27201,["$2"],"IconMark"]
 :HL["/_next/static/chunks/3p75loxv01r61.css","style"]
-8:X
-d:X
-d:C
-12:[["children",{"s":"__PAGE__","h":160,"d":{"r":["$","$1","c",{"children":[["$","main",null,{"className":"container-narrow pt-16 pb-8","children":[["$","$L13",null,{"href":"/en/docs","className":"text-[12.5px]","style":{"color":"var(--muted)"},"children":"← All pages"}],["$","h1",null,{"className":"mt-6 text-[34px] font-bold tracking-tight leading-[1.1]","children":"HTTP/2"}],["$","p",null,{"className":"mt-3 text-[15px]","style":{"color":"var(--muted)"},"children":"ALPN, streaming, flow control, TLS 1.3."}],["$","article",null,{"className":"mt-10 prose","children":[["$","p","0",{"children":"HTTP/2 turns on automatically when the client offers it via ALPN during the TLS handshake. HTTP/1.1 clients keep working — they just use the old code path."}],["$","h2","1",{"children":"What is supported"}],["$","ul","2",{"children":[["$","li","0",{"children":"ALPN: h2 and http/1.1 on the same port"}],["$","li","1",{"children":"Stream multiplexing"}],["$","li","2",{"children":"Flow control in both directions"}],["$","li","3",{"children":"Stream priorities and dependencies"}],["$","li","4",{"children":"gzip compression of responses"}]]}],["$","h2","3",{"children":"WebSocket over HTTP/2"}],["$","p","4",{"children":"Via extended CONNECT per RFC 8441. Works when both the client and the backend support the protocol."}],["$","h2","5",{"children":"Verify"}],["$","pre","6",{"children":["$","code",null,{"children":"curl -k -v https://127.0.0.1:8443/\n# Look for the line \"ALPN: server accepted h2\""}]}],["$","h2","7",{"children":"What is NOT supported"}],["$","ul","8",{"children":[["$","li","0",{"children":"HTTP/3 and QUIC — on the roadmap"}],["$","li","1",{"children":"Server Push — removed from Chrome, not worth implementing"}]]}]]}],"$L14","$L15"]}],null,"$L16"]}],"p":"$@17","v":null,"s":"$8"}}]]
-10:[["children",{"s":{"n":"slug","t":"d","k":"http2","s":[]},"h":96,"d":{"r":["$","$1","c",{"children":[null,["$","$L4",null,{"parallelRouterKey":"children","template":["$","$L5",null,{}]}]]}],"p":"$@11","v":"$d","s":"$8"},"c":"$Q12"}]]
-e:[["children",{"s":"docs","h":96,"d":{"r":["$","$1","c",{"children":[null,["$","$L4",null,{"parallelRouterKey":"children","template":["$","$L5",null,{}]}]]}],"p":"$@f","v":"$d","s":"$8"},"c":"$Q10"}]]
-b:[["children",{"s":"en","h":96,"d":{"r":["$","$1","c",{"children":[null,["$","$L4",null,{"parallelRouterKey":"children","template":["$","$L5",null,{}]}]]}],"p":"$@c","v":"$d","s":"$8"},"c":"$Qe"}]]
-9:[["children",{"s":"(en)","h":96,"d":{"r":["$","$1","c",{"children":[null,["$","$L4",null,{"parallelRouterKey":"children","template":["$","$L5",null,{}],"notFound":[[["$","title",null,{"children":"404: This page could not be found."}],["$","div",null,{"style":"$0:t:t:d:r:props:children:1:props:children:props:children:1:props:children:props:notFound:0:1:props:style","children":["$","div",null,{"children":[["$","style",null,{"dangerouslySetInnerHTML":{"__html":"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}"}}],["$","h1",null,{"className":"next-error-h1","style":"$0:t:t:d:r:props:children:1:props:children:props:children:1:props:children:props:notFound:0:1:props:children:props:children:1:props:style","children":404}],["$","div",null,{"style":"$0:t:t:d:r:props:children:1:props:children:props:children:1:props:children:props:notFound:0:1:props:children:props:children:2:props:style","children":["$","h2",null,{"style":"$0:t:t:d:r:props:children:1:props:children:props:children:1:props:children:props:notFound:0:1:props:children:props:children:2:props:children:props:style","children":"This page could not be found."}]}]]}]}]],[]]}]]}],"p":"$@a","v":null,"s":"$8"},"c":"$Qb"}]]
-0:{"t":{"t":{"s":"","h":80,"d":{"r":["$","$1","c",{"children":[[["$","link","0",{"rel":"stylesheet","href":"/_next/static/chunks/3p75loxv01r61.css","precedence":"next"}],["$","script","script-0",{"src":"/_next/static/chunks/2gkogrwrpk2g8.js","async":true}]],["$","html",null,{"lang":"ru","suppressHydrationWarning":true,"children":["$","body",null,{"children":[["$","$L3",null,{}],["$","div",null,{"id":"main-content","children":["$","$L4",null,{"parallelRouterKey":"children","template":["$","$L5",null,{}],"notFound":[[["$","title",null,{"children":"404: This page could not be found."}],["$","div",null,{"style":{"fontFamily":"system-ui,\"Segoe UI\",Roboto,Helvetica,Arial,sans-serif,\"Apple Color Emoji\",\"Segoe UI Emoji\"","height":"100vh","textAlign":"center","display":"flex","flexDirection":"column","alignItems":"center","justifyContent":"center"},"children":["$","div",null,{"children":[["$","style",null,{"dangerouslySetInnerHTML":{"__html":"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}"}}],["$","h1",null,{"className":"next-error-h1","style":{"display":"inline-block","margin":"0 20px 0 0","padding":"0 23px 0 0","fontSize":24,"fontWeight":500,"verticalAlign":"top","lineHeight":"49px"},"children":404}],["$","div",null,{"style":{"display":"inline-block"},"children":["$","h2",null,{"style":{"fontSize":14,"fontWeight":400,"lineHeight":"49px","margin":0},"children":"This page could not be found."}]}]]}]}]],[]]}]}],["$","$L6",null,{}]]}]}]]}],"p":"$@7","v":null,"s":"$8"},"c":"$Q9"},"h":{"r":["$","$1","h",{"children":[null,["$","$L19",null,{"children":[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]}],["$","$L1b",null,{"children":[["$","div",null,{"hidden":true,"children":["$","$1c",null,{"name":"Next.Metadata","children":[["$","title","0",{"children":"banditx — fast reverse proxy in Rust"}],["$","meta","1",{"name":"description","content":"HTTP/1.1, HTTP/2, FastCGI. Reverse proxy, load balancer, health checks, Prometheus metrics — один бинарник без зависимостей."}],["$","link","2",{"rel":"icon","href":"/favicon.ico?favicon.117ezoe8m31dk.ico","sizes":"48x48","type":"image/x-icon"}],["$","$L1d","3",{}]]}]}],null]}],null]}],"p":"$@1e","v":null,"s":"$8"}},"a":"$@1f","u":"$@20","b":"LH-WyhzpSPn8kYF5Qr-hB"}
-21:I[97367,["$2"],"OutletBoundary"]
-14:["$","hr",null,{"className":"hr"}]
-15:["$","nav",null,{"className":"flex items-center justify-between gap-4 text-[14px]","children":[["$","$L13",null,{"href":"/en/docs/fastcgi","className":"hover:underline","children":["← ","FastCGI"]}],["$","$L13",null,{"href":"/en/docs/benchmark","className":"hover:underline","children":["Benchmark"," →"]}]]}]
-16:["$","$L21",null,{"children":["$","$1c",null,{"name":"Next.MetadataOutlet","children":"$@22"}]}]
-8:300
-22:null
-20:true
-8:C
-1f:0
-11:"$undefined"
-f:"$undefined"
+6:X
+6:C
+7:X
+13:[["children",{"s":"__PAGE__","h":160,"d":{"r":["$","$1","c",{"children":[["$","main",null,{"className":"container-narrow pt-16 pb-8","children":[["$","$L14",null,{"href":"/en/docs","className":"text-[12.5px]","style":{"color":"var(--muted)"},"children":"← All pages"}],["$","h1",null,{"className":"mt-6 text-[34px] font-bold tracking-tight leading-[1.1]","children":"HTTP/2"}],["$","p",null,{"className":"mt-3 text-[15px]","style":{"color":"var(--muted)"},"children":"ALPN, streaming, flow control, TLS 1.3."}],["$","article",null,{"className":"mt-10 prose","children":[["$","p","0",{"children":"HTTP/2 turns on automatically when the client offers it via ALPN during the TLS handshake. HTTP/1.1 clients keep working — they just use the old code path."}],["$","h2","1",{"children":"What is supported"}],["$","ul","2",{"children":[["$","li","0",{"children":"ALPN: h2 and http/1.1 on the same port"}],["$","li","1",{"children":"Stream multiplexing"}],["$","li","2",{"children":"Flow control in both directions"}],["$","li","3",{"children":"Stream priorities and dependencies"}],["$","li","4",{"children":"gzip compression of responses"}]]}],["$","h2","3",{"children":"WebSocket over HTTP/2"}],["$","p","4",{"children":"Via extended CONNECT per RFC 8441. Works when both the client and the backend support the protocol."}],["$","h2","5",{"children":"Verify"}],["$","pre","6",{"children":["$","code",null,{"children":"curl -k -v https://127.0.0.1:8443/\n# Look for the line \"ALPN: server accepted h2\""}]}],["$","h2","7",{"children":"What is NOT supported"}],["$","ul","8",{"children":[["$","li","0",{"children":"HTTP/3 and QUIC — on the roadmap"}],["$","li","1",{"children":"Server Push — removed from Chrome, not worth implementing"}]]}]]}],"$L15","$L16"]}],null,"$L17"]}],"p":"$@18","v":null,"s":"$7"}}]]
+11:[["children",{"s":{"n":"slug","t":"d","k":"http2","s":[]},"h":96,"d":{"r":["$","$1","c",{"children":[null,["$","$L3",null,{"parallelRouterKey":"children","template":["$","$L4",null,{}]}]]}],"p":"$@12","v":"$6","s":"$7"},"c":"$Q13"}]]
+f:[["children",{"s":"docs","h":96,"d":{"r":["$","$1","c",{"children":[null,["$","$L3",null,{"parallelRouterKey":"children","template":["$","$L4",null,{}]}]]}],"p":"$@10","v":"$6","s":"$7"},"c":"$Q11"}]]
+d:[["children",{"s":"en","h":96,"d":{"r":["$","$1","c",{"children":[null,["$","$L3",null,{"parallelRouterKey":"children","template":["$","$L4",null,{}]}]]}],"p":"$@e","v":"$6","s":"$7"},"c":"$Qf"}]]
+8:[["children",{"s":"(en)","h":112,"d":{"r":["$","$1","c",{"children":[[["$","link","0",{"rel":"stylesheet","href":"/_next/static/chunks/3p75loxv01r61.css","precedence":"next"}],["$","script","script-0",{"src":"/_next/static/chunks/1ywf7zs-0sew6.js","async":true}]],["$","html",null,{"lang":"en","children":["$","body",null,{"children":[["$","$La",null,{}],["$","div",null,{"id":"main-content","children":["$","$L3",null,{"parallelRouterKey":"children","template":["$","$L4",null,{}],"notFound":[[["$","title",null,{"children":"404: This page could not be found."}],["$","div",null,{"style":"$0:t:t:d:r:props:children:1:props:notFound:0:1:props:style","children":["$","div",null,{"children":[["$","style",null,{"dangerouslySetInnerHTML":{"__html":"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}"}}],["$","h1",null,{"className":"next-error-h1","style":"$0:t:t:d:r:props:children:1:props:notFound:0:1:props:children:props:children:1:props:style","children":404}],["$","div",null,{"style":"$0:t:t:d:r:props:children:1:props:notFound:0:1:props:children:props:children:2:props:style","children":["$","h2",null,{"style":"$0:t:t:d:r:props:children:1:props:notFound:0:1:props:children:props:children:2:props:children:props:style","children":"This page could not be found."}]}]]}]}]],[]]}]}],["$","$Lb",null,{}]]}]}]]}],"p":"$@c","v":null,"s":"$7"},"c":"$Qd"}]]
+0:{"t":{"t":{"s":"","h":80,"d":{"r":["$","$1","c",{"children":[null,["$","$L3",null,{"parallelRouterKey":"children","template":["$","$L4",null,{}],"notFound":[[["$","title",null,{"children":"404: This page could not be found."}],["$","div",null,{"style":{"fontFamily":"system-ui,\"Segoe UI\",Roboto,Helvetica,Arial,sans-serif,\"Apple Color Emoji\",\"Segoe UI Emoji\"","height":"100vh","textAlign":"center","display":"flex","flexDirection":"column","alignItems":"center","justifyContent":"center"},"children":["$","div",null,{"children":[["$","style",null,{"dangerouslySetInnerHTML":{"__html":"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}"}}],["$","h1",null,{"className":"next-error-h1","style":{"display":"inline-block","margin":"0 20px 0 0","padding":"0 23px 0 0","fontSize":24,"fontWeight":500,"verticalAlign":"top","lineHeight":"49px"},"children":404}],["$","div",null,{"style":{"display":"inline-block"},"children":["$","h2",null,{"style":{"fontSize":14,"fontWeight":400,"lineHeight":"49px","margin":0},"children":"This page could not be found."}]}]]}]}]],[]]}]]}],"p":"$@5","v":"$6","s":"$7"},"c":"$Q8"},"h":{"r":["$","$1","h",{"children":[null,["$","$L1a",null,{"children":[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]}],["$","$L1c",null,{"children":[["$","div",null,{"hidden":true,"children":["$","$1d",null,{"name":"Next.Metadata","children":[["$","title","0",{"children":"banditx — fast reverse proxy in Rust"}],["$","meta","1",{"name":"description","content":"HTTP/1.1, HTTP/2, FastCGI. Reverse proxy, load balancer, health checks, Prometheus metrics — a single binary with no dependencies."}],["$","link","2",{"rel":"icon","href":"/favicon.ico?favicon.117ezoe8m31dk.ico","sizes":"48x48","type":"image/x-icon"}],["$","$L1e","3",{}]]}]}],null]}],null]}],"p":"$@1f","v":null,"s":"$7"}},"a":"$@20","u":"$@21","b":"50W1_YcMnH5gzkRbx8O5Z"}
+22:I[97367,["$2"],"OutletBoundary"]
+15:["$","hr",null,{"className":"hr"}]
+16:["$","nav",null,{"className":"flex items-center justify-between gap-4 text-[14px]","children":[["$","$L14",null,{"href":"/en/docs/fastcgi","className":"hover:underline","children":["← ","FastCGI"]}],["$","$L14",null,{"href":"/en/docs/benchmark","className":"hover:underline","children":["Benchmark"," →"]}]]}]
+17:["$","$L22",null,{"children":["$","$1d",null,{"name":"Next.MetadataOutlet","children":"$@23"}]}]
+7:300
+23:null
+21:true
+7:C
+20:0
+12:"$undefined"
+10:"$undefined"
+e:"$undefined"
 c:"$undefined"
-a:"$undefined"
-7:"$undefined"
-1e:"$undefined"
-17:"$undefined"
+5:"$undefined"
+1f:"$undefined"
+18:"$undefined"
