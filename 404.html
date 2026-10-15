@@ -9,7 +9,6 @@
 <link rel="stylesheet" href="/_next/static/chunks/1rhofnb414w_t.css" data-precedence="next"/>
 <link rel="stylesheet" href="/_next/static/chunks/2x1hmm5czkg-b.css" data-precedence="next"/>
 <script>
-/* 1) URL cleanup: /path/ -> /path, /path.html -> /path */
 (function(){try{
   var p=location.pathname;
   if(p.length>1&&p.slice(-1)==='/'){location.replace(p.slice(0,-1)+location.search+location.hash);return;}
@@ -19,9 +18,7 @@
     location.replace(c+location.search+location.hash);return;
   }
 }catch(e){}})();
-/* 2) theme */
 (function(){try{var t=localStorage.getItem('banditx-theme');if(t==='dark'){document.documentElement.classList.add('dark');}}catch(e){}})();
-/* 3) lang from pathname */
 (function(){try{
   var isEn=location.pathname.indexOf('/en')===0;
   document.documentElement.lang=isEn?'en':'ru';
@@ -31,35 +28,28 @@
 }catch(e){}})();
 </script>
 <style>
-/* Локальные стили 404 — используют переменные сайта */
 .nf-page{
   width:min(calc(1400px + 2*var(--page-pad,40px)), 100%);
   margin:0 auto;
   padding:clamp(72px, 10vw, 140px) var(--page-pad,40px) clamp(80px, 10vw, 140px);
-  min-height:60vh;
-  display:grid; place-items:center; text-align:center;
+  min-height:60vh;display:grid;place-items:center;text-align:center;
 }
 .nf-inner{max-width:640px}
 .nf-num{
   font-family:var(--font-head, inherit);
   font-size:clamp(88px, 15vw, 200px);
-  line-height:.85; letter-spacing:-.05em;
-  margin:0 0 20px; color:var(--ink, #222);
+  line-height:.85;letter-spacing:-.05em;margin:0 0 20px;color:var(--ink, #222);
 }
 .nf-msg{
   color:var(--meta, #666);
   font-size:clamp(15px, 1.35vw, 19px);
-  line-height:1.55;
-  margin:0 auto 32px;
+  line-height:1.55;margin:0 auto 32px;
 }
 .nf-btn{
-  display:inline-flex; align-items:center; justify-content:center; gap:8px;
-  min-height:52px; padding:12px 24px;
-  border-radius:14px;
-  background:var(--blue, #2d5bff);
-  color:#fff; text-decoration:none;
-  font-family:var(--font-label, inherit);
-  font-size:15px; font-weight:500;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-height:52px;padding:12px 24px;border-radius:14px;
+  background:var(--blue, #2d5bff);color:#fff;text-decoration:none;
+  font-family:var(--font-label, inherit);font-size:15px;font-weight:500;
   transition:background-color .12s;
 }
 .nf-btn:hover{background:var(--blue-readable, #1d43cc)}
@@ -68,7 +58,7 @@ html[data-404-lang="en"] .nf-ru{display:none!important}
 </style>
 </head>
 <body>
-
+<nav class="u3Nh-W_dock" aria-label="Основная навигация"><div class="u3Nh-W_panel"><a class="u3Nh-W_brand" aria-label="banditx" href="/"></a><div class="u3Nh-W_items"><a class="u3Nh-W_item u3Nh-W_active" href="/">Обзор</a><a class="u3Nh-W_item " href="/features">Фичи</a><a class="u3Nh-W_item " href="/benchmarks">Бенчмарки</a><a class="u3Nh-W_item " href="/docs">Доки</a><a class="u3Nh-W_item " href="/compare">Сравнение</a></div><button type="button" class="cYqn0q_trigger" aria-label="Поиск" title="Поиск (Ctrl+K)"></button><button type="button" class="u3Nh-W_theme" aria-label="Переключить тему" title="Переключить тему"></button><a class="u3Nh-W_lang" aria-label="Switch to English" title="Switch to English" href="/en"></a></div></nav>
 <main class="nf-page">
   <div class="nf-inner">
     <div class="nf-num">404</div>
@@ -78,9 +68,9 @@ html[data-404-lang="en"] .nf-ru{display:none!important}
     <a class="nf-btn nf-en" href="/en">←&nbsp;Go&nbsp;home</a>
   </div>
 </main>
-
+<footer class="p-5sba_footer"><div class="p-5sba_inner"><div class="p-5sba_cols"><div><h2>Разделы</h2><ul><li><a href="/features">Фичи</a></li><li><a href="/benchmarks">Бенчмарки</a></li><li><a href="/docs">Доки</a></li><li><a href="/compare">Сравнение</a></li><li><a href="/sitemap">Карта сайта</a></li></ul></div><div><h2>Протоколы</h2><ul><li><a href="/features#http2">HTTP/2</a></li><li><a href="/features#http1">HTTP/1.1</a></li><li><a href="/features#fastcgi">FastCGI</a></li><li><a href="/features#websocket">WebSocket</a></li></ul></div><div><h2>Ссылки</h2><ul><li><a href="https://github.com/NormikChel/banditx">GitHub</a></li><li><a href="https://github.com/NormikChel/banditx/releases">Releases</a></li><li><a href="https://github.com/NormikChel/banditx/issues">Issues</a></li></ul></div></div><p class="p-5sba_note">banditx — MIT licensed.<!-- --> <!-- -->Один бинарник, без runtime-зависимостей.</p></div></footer>
 <script>
-/* Theme toggle для статической кнопки в наве */
+/* Theme toggle в статическом nav */
 (function(){
   var btns=document.querySelectorAll('nav button[class*="__theme"], nav button[aria-label*="тему"], nav button[aria-label*="theme"]');
   btns.forEach(function(btn){
@@ -93,21 +83,20 @@ html[data-404-lang="en"] .nf-ru{display:none!important}
     });
   });
 })();
-
-/* Языковая ссылка: всегда ведёт на главную другого языка */
+/* Языковая ссылка */
 (function(){
   var isEn=document.documentElement.lang==='en';
   var link=document.querySelector('nav a[class*="__lang"], nav a[class*="lang"]');
   if(link)link.setAttribute('href', isEn?'/':'/en');
 })();
-
-/* Нормализуем ссылки в доке под текущую локаль */
+/* Нормализация ссылок в доке под текущую локаль */
 (function(){
   var isEn=document.documentElement.lang==='en';
   document.querySelectorAll('nav a').forEach(function(a){
     var href=a.getAttribute('href')||'';
     if(href.startsWith('http')||href.startsWith('#'))return;
     if(a.className && String(a.className).indexOf('lang')!==-1)return;
+    if(a.className && String(a.className).indexOf('brand')!==-1)return;
     var hasEn=(href==='/en'||href.indexOf('/en/')===0);
     if(isEn&&!hasEn){
       a.setAttribute('href', href==='/'?'/en':'/en'+href);
@@ -116,8 +105,7 @@ html[data-404-lang="en"] .nf-ru{display:none!important}
     }
   });
 })();
-
-/* Активная ссылка в доке — убираем, потому что 404 не = главная */
+/* Активная ссылка — снимаем */
 (function(){
   document.querySelectorAll('nav [class*="__active"]').forEach(function(el){
     el.className=String(el.className).split(/s+/).filter(function(c){return c.indexOf('__active')===-1}).join(' ');
