@@ -3,49 +3,126 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>404 — не найдено</title>
+<meta name="theme-color" content="#f8f8f8">
+<title>404 — banditx</title>
+<link rel="stylesheet" href="/_next/static/chunks/431mdvp5kbiu4.css" data-precedence="next"/>
+<link rel="stylesheet" href="/_next/static/chunks/1rhofnb414w_t.css" data-precedence="next"/>
+<link rel="stylesheet" href="/_next/static/chunks/2x1hmm5czkg-b.css" data-precedence="next"/>
 <script>
-(function () {
-  try {
-    var p = location.pathname;
-    // /path/ → /path  (голый / не трогаем)
-    if (p.length > 1 && p.slice(-1) === '/') {
-      location.replace(p.slice(0, -1) + location.search + location.hash);
-      return;
-    }
-    // на всякий: /path.html → /path
-    if (p.length >= 5 && p.slice(-5) === '.html') {
-      var c = p.slice(0, -5);
-      if (c.length >= 6 && c.slice(-6) === '/index') c = c.slice(0, -6) || '/';
-      location.replace(c + location.search + location.hash);
-      return;
-    }
-  } catch (e) {}
-})();
+/* 1) URL cleanup: /path/ -> /path, /path.html -> /path */
+(function(){try{
+  var p=location.pathname;
+  if(p.length>1&&p.slice(-1)==='/'){location.replace(p.slice(0,-1)+location.search+location.hash);return;}
+  if(p.length>=5&&p.slice(-5)==='.html'){
+    var c=p.slice(0,-5);
+    if(c.length>=6&&c.slice(-6)==='/index')c=c.slice(0,-6)||'/';
+    location.replace(c+location.search+location.hash);return;
+  }
+}catch(e){}})();
+/* 2) theme */
+(function(){try{var t=localStorage.getItem('banditx-theme');if(t==='dark'){document.documentElement.classList.add('dark');}}catch(e){}})();
+/* 3) lang from pathname */
+(function(){try{
+  var isEn=location.pathname.indexOf('/en')===0;
+  document.documentElement.lang=isEn?'en':'ru';
+  document.documentElement.setAttribute('data-404-lang',isEn?'en':'ru');
+  var m=document.querySelector('meta[name="theme-color"]');
+  if(m)m.setAttribute('content',document.documentElement.classList.contains('dark')?'#14181c':'#f8f8f8');
+}catch(e){}})();
 </script>
 <style>
-  html, body { margin: 0; height: 100%; }
-  body {
-    display: grid; place-items: center; text-align: center; padding: 24px;
-    background: #f8f8f8; color: #222;
-    font: 16px/1.5 system-ui, -apple-system, sans-serif;
-  }
-  @media (prefers-color-scheme: dark) {
-    body { background: #14181c; color: #f0f0f0; }
-    a { color: #7aa2ff; }
-  }
-  h1 { font-size: 64px; margin: 0; letter-spacing: -.04em; }
-  p { margin: 8px 0 24px; color: #666; }
-  @media (prefers-color-scheme: dark) { p { color: #808080; } }
-  a { color: #2d5bff; text-decoration: none; }
-  a:hover { text-decoration: underline; }
+/* Локальные стили 404 — используют переменные сайта */
+.nf-page{
+  width:min(calc(1400px + 2*var(--page-pad,40px)), 100%);
+  margin:0 auto;
+  padding:clamp(72px, 10vw, 140px) var(--page-pad,40px) clamp(80px, 10vw, 140px);
+  min-height:60vh;
+  display:grid; place-items:center; text-align:center;
+}
+.nf-inner{max-width:640px}
+.nf-num{
+  font-family:var(--font-head, inherit);
+  font-size:clamp(88px, 15vw, 200px);
+  line-height:.85; letter-spacing:-.05em;
+  margin:0 0 20px; color:var(--ink, #222);
+}
+.nf-msg{
+  color:var(--meta, #666);
+  font-size:clamp(15px, 1.35vw, 19px);
+  line-height:1.55;
+  margin:0 auto 32px;
+}
+.nf-btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  min-height:52px; padding:12px 24px;
+  border-radius:14px;
+  background:var(--blue, #2d5bff);
+  color:#fff; text-decoration:none;
+  font-family:var(--font-label, inherit);
+  font-size:15px; font-weight:500;
+  transition:background-color .12s;
+}
+.nf-btn:hover{background:var(--blue-readable, #1d43cc)}
+html[data-404-lang="ru"] .nf-en{display:none!important}
+html[data-404-lang="en"] .nf-ru{display:none!important}
 </style>
 </head>
 <body>
-  <main>
-    <h1>404</h1>
-    <p>Страница не найдена</p>
-    <p><a href="/">← На главную</a></p>
-  </main>
+
+<main class="nf-page">
+  <div class="nf-inner">
+    <div class="nf-num">404</div>
+    <p class="nf-msg nf-ru">Страница не найдена. Возможно, ссылка устарела или в адресе опечатка.</p>
+    <p class="nf-msg nf-en">Page not found. The link may be outdated or there is a typo in the URL.</p>
+    <a class="nf-btn nf-ru" href="/">←&nbsp;На&nbsp;главную</a>
+    <a class="nf-btn nf-en" href="/en">←&nbsp;Go&nbsp;home</a>
+  </div>
+</main>
+
+<script>
+/* Theme toggle для статической кнопки в наве */
+(function(){
+  var btns=document.querySelectorAll('nav button[class*="__theme"], nav button[aria-label*="тему"], nav button[aria-label*="theme"]');
+  btns.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var root=document.documentElement;
+      var isDark=root.classList.toggle('dark');
+      try{localStorage.setItem('banditx-theme', isDark?'dark':'light');}catch(e){}
+      var m=document.querySelector('meta[name="theme-color"]');
+      if(m)m.setAttribute('content', isDark?'#14181c':'#f8f8f8');
+    });
+  });
+})();
+
+/* Языковая ссылка: всегда ведёт на главную другого языка */
+(function(){
+  var isEn=document.documentElement.lang==='en';
+  var link=document.querySelector('nav a[class*="__lang"], nav a[class*="lang"]');
+  if(link)link.setAttribute('href', isEn?'/':'/en');
+})();
+
+/* Нормализуем ссылки в доке под текущую локаль */
+(function(){
+  var isEn=document.documentElement.lang==='en';
+  document.querySelectorAll('nav a').forEach(function(a){
+    var href=a.getAttribute('href')||'';
+    if(href.startsWith('http')||href.startsWith('#'))return;
+    if(a.className && String(a.className).indexOf('lang')!==-1)return;
+    var hasEn=(href==='/en'||href.indexOf('/en/')===0);
+    if(isEn&&!hasEn){
+      a.setAttribute('href', href==='/'?'/en':'/en'+href);
+    }else if(!isEn&&hasEn){
+      a.setAttribute('href', href==='/en'?'/':href.slice(3));
+    }
+  });
+})();
+
+/* Активная ссылка в доке — убираем, потому что 404 не = главная */
+(function(){
+  document.querySelectorAll('nav [class*="__active"]').forEach(function(el){
+    el.className=String(el.className).split(/s+/).filter(function(c){return c.indexOf('__active')===-1}).join(' ');
+  });
+})();
+</script>
 </body>
 </html>
