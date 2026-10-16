@@ -4,7 +4,7 @@
   <subtitle>HTTP/1.1, HTTP/2, FastCGI, WebSocket. Reverse proxy, load balancer, Prometheus metrics — one binary.</subtitle>
   <link href="https://banditx.cc.cd/atom.xml" rel="self" type="application/atom+xml"/>
   <link href="https://banditx.cc.cd" rel="alternate" type="text/html"/>
-  <updated>2026-10-16T15:18:26.023Z</updated>
+  <updated>2026-10-16T15:26:13.232Z</updated>
   <id>https://banditx.cc.cd/</id>
   <author>
     <name>NormikChel</name>
@@ -16,7 +16,7 @@
     <title>Бенчмарки — banditx — banditx</title>
     <link href="https://banditx.cc.cd/benchmarks"/>
     <id>https://banditx.cc.cd/benchmarks</id>
-    <updated>2026-10-16T15:18:26.023Z</updated>
+    <updated>2026-10-16T15:26:13.232Z</updated>
     <summary>Сравнение производительности banditx, nginx, caddy и haproxy.</summary>
     <author><name>NormikChel</name></author>
     <category term="ru"/>
@@ -25,7 +25,7 @@
     <title>Сравнение с nginx и caddy — banditx — banditx</title>
     <link href="https://banditx.cc.cd/compare"/>
     <id>https://banditx.cc.cd/compare</id>
-    <updated>2026-10-16T15:18:26.023Z</updated>
+    <updated>2026-10-16T15:26:13.232Z</updated>
     <summary>HTTP/1.1, HTTP/2, FastCGI. Reverse proxy, балансировка, health checks, Prometheus-метрики — один бинарник без зависимостей.</summary>
     <author><name>NormikChel</name></author>
     <category term="ru"/>
@@ -34,7 +34,7 @@
     <title>Балансировка — banditx — banditx</title>
     <link href="https://banditx.cc.cd/docs/balancing"/>
     <id>https://banditx.cc.cd/docs/balancing</id>
-    <updated>2026-10-16T15:18:26.023Z</updated>
+    <updated>2026-10-16T15:26:13.232Z</updated>
     <summary>Стратегии, sticky sessions, health checks, circuit breaker, retries.</summary>
     <author><name>NormikChel</name></author>
     <category term="ru"/>
@@ -43,7 +43,7 @@
     <title>Конфигурация — banditx — banditx</title>
     <link href="https://banditx.cc.cd/docs/configuration"/>
     <id>https://banditx.cc.cd/docs/configuration</id>
-    <updated>2026-10-16T15:18:26.023Z</updated>
+    <updated>2026-10-16T15:26:13.232Z</updated>
     <summary>Один YAML-файл. Полная схема, все поля, примеры, переменные окружения.</summary>
     <author><name>NormikChel</name></author>
     <category term="ru"/>
@@ -52,7 +52,7 @@
     <title>Установка — banditx — banditx</title>
     <link href="https://banditx.cc.cd/docs/installation"/>
     <id>https://banditx.cc.cd/docs/installation</id>
-    <updated>2026-10-16T15:18:26.023Z</updated>
+    <updated>2026-10-16T15:26:13.232Z</updated>
     <summary>Как поставить banditx: бинарник, Docker, cargo, systemd. Займёт меньше минуты.</summary>
     <author><name>NormikChel</name></author>
     <category term="ru"/>
@@ -61,7 +61,7 @@
     <title>Метрики и логи — banditx — banditx</title>
     <link href="https://banditx.cc.cd/docs/metrics"/>
     <id>https://banditx.cc.cd/docs/metrics</id>
-    <updated>2026-10-16T15:18:26.023Z</updated>
+    <updated>2026-10-16T15:26:13.232Z</updated>
     <summary>Prometheus, готовые дашборды, структурные логи, алерты.</summary>
     <author><name>NormikChel</name></author>
     <category term="ru"/>
@@ -70,7 +70,7 @@
     <title>Маршрутизация — banditx — banditx</title>
     <link href="https://banditx.cc.cd/docs/routing"/>
     <id>https://banditx.cc.cd/docs/routing</id>
-    <updated>2026-10-16T15:18:26.023Z</updated>
+    <updated>2026-10-16T15:26:13.232Z</updated>
     <summary>Host, path, regex, headers, приоритеты, redirect и rewrite — с примерами.</summary>
     <author><name>NormikChel</name></author>
     <category term="ru"/>
@@ -79,7 +79,7 @@
     <title>TLS / ACME — banditx — banditx</title>
     <link href="https://banditx.cc.cd/docs/tls"/>
     <id>https://banditx.cc.cd/docs/tls</id>
-    <updated>2026-10-16T15:18:26.023Z</updated>
+    <updated>2026-10-16T15:26:13.232Z</updated>
     <summary>Свои сертификаты, Let&apos;s Encrypt из коробки, SNI, mTLS, HSTS.</summary>
     <author><name>NormikChel</name></author>
     <category term="ru"/>
@@ -88,7 +88,7 @@
     <title>Документация — banditx — banditx</title>
     <link href="https://banditx.cc.cd/docs"/>
     <id>https://banditx.cc.cd/docs</id>
-    <updated>2026-10-16T15:18:26.023Z</updated>
+    <updated>2026-10-16T15:26:13.232Z</updated>
     <summary>HTTP/1.1, HTTP/2, FastCGI. Reverse proxy, балансировка, health checks, Prometheus-метрики — один бинарник без зависимостей.</summary>
     <author><name>NormikChel</name></author>
     <category term="ru"/>
@@ -97,7 +97,7 @@
     <title>Возможности — banditx — banditx</title>
     <link href="https://banditx.cc.cd/features"/>
     <id>https://banditx.cc.cd/features</id>
-    <updated>2026-10-16T15:18:26.023Z</updated>
+    <updated>2026-10-16T15:26:13.232Z</updated>
     <summary>HTTP/1.1, HTTP/2, FastCGI, WebSocket, балансировка, TLS, метрики.</summary>
     <author><name>NormikChel</name></author>
     <category term="ru"/>
@@ -106,7 +106,7 @@
     <title>banditx — быстрый reverse proxy на Rust</title>
     <link href="https://banditx.cc.cd/"/>
     <id>https://banditx.cc.cd/</id>
-    <updated>2026-10-16T15:18:26.023Z</updated>
+    <updated>2026-10-16T15:26:13.232Z</updated>
     <summary>HTTP/1.1, HTTP/2, FastCGI. Reverse proxy, балансировка, health checks, Prometheus-метрики — один бинарник без зависимостей.</summary>
     <author><name>NormikChel</name></author>
     <category term="ru"/>
@@ -115,7 +115,7 @@
     <title>banditx — быстрый reverse proxy на Rust</title>
     <link href="https://banditx.cc.cd/ru"/>
     <id>https://banditx.cc.cd/ru</id>
-    <updated>2026-10-16T15:18:26.023Z</updated>
+    <updated>2026-10-16T15:26:13.232Z</updated>
     <summary>HTTP/1.1, HTTP/2, FastCGI. Reverse proxy, балансировка, health checks, Prometheus-метрики — один бинарник без зависимостей.</summary>
     <author><name>NormikChel</name></author>
     <category term="ru"/>
@@ -124,7 +124,7 @@
     <title>Карта сайта — banditx — banditx</title>
     <link href="https://banditx.cc.cd/sitemap"/>
     <id>https://banditx.cc.cd/sitemap</id>
-    <updated>2026-10-16T15:18:26.023Z</updated>
+    <updated>2026-10-16T15:26:13.232Z</updated>
     <summary>Все разделы сайта banditx: обзор, возможности, бенчмарки, сравнение с nginx и документация.</summary>
     <author><name>NormikChel</name></author>
     <category term="ru"/>
@@ -133,7 +133,7 @@
     <title>Benchmarks — banditx — banditx</title>
     <link href="https://banditx.cc.cd/en/benchmarks"/>
     <id>https://banditx.cc.cd/en/benchmarks</id>
-    <updated>2026-10-16T15:18:26.023Z</updated>
+    <updated>2026-10-16T15:26:13.232Z</updated>
     <summary>Performance comparison of banditx, nginx, caddy and haproxy.</summary>
     <author><name>NormikChel</name></author>
     <category term="en"/>
@@ -142,7 +142,7 @@
     <title>Compare with nginx and caddy — banditx — banditx</title>
     <link href="https://banditx.cc.cd/en/compare"/>
     <id>https://banditx.cc.cd/en/compare</id>
-    <updated>2026-10-16T15:18:26.023Z</updated>
+    <updated>2026-10-16T15:26:13.232Z</updated>
     <summary>HTTP/1.1, HTTP/2, FastCGI. Reverse proxy, load balancer, health checks, Prometheus metrics — a single binary with no dependencies.</summary>
     <author><name>NormikChel</name></author>
     <category term="en"/>
@@ -151,7 +151,7 @@
     <title>Load balancing — banditx — banditx</title>
     <link href="https://banditx.cc.cd/en/docs/balancing"/>
     <id>https://banditx.cc.cd/en/docs/balancing</id>
-    <updated>2026-10-16T15:18:26.023Z</updated>
+    <updated>2026-10-16T15:26:13.232Z</updated>
     <summary>Strategies, sticky sessions, health checks, circuit breaker, retries.</summary>
     <author><name>NormikChel</name></author>
     <category term="en"/>
@@ -160,7 +160,7 @@
     <title>Configuration — banditx — banditx</title>
     <link href="https://banditx.cc.cd/en/docs/configuration"/>
     <id>https://banditx.cc.cd/en/docs/configuration</id>
-    <updated>2026-10-16T15:18:26.023Z</updated>
+    <updated>2026-10-16T15:26:13.232Z</updated>
     <summary>A single YAML file. Full schema, every field, examples, env vars.</summary>
     <author><name>NormikChel</name></author>
     <category term="en"/>
@@ -169,7 +169,7 @@
     <title>Installation — banditx — banditx</title>
     <link href="https://banditx.cc.cd/en/docs/installation"/>
     <id>https://banditx.cc.cd/en/docs/installation</id>
-    <updated>2026-10-16T15:18:26.023Z</updated>
+    <updated>2026-10-16T15:26:13.232Z</updated>
     <summary>Install banditx: binary, Docker, cargo, systemd. Takes under a minute.</summary>
     <author><name>NormikChel</name></author>
     <category term="en"/>
@@ -178,7 +178,7 @@
     <title>Metrics &amp; logs — banditx — banditx</title>
     <link href="https://banditx.cc.cd/en/docs/metrics"/>
     <id>https://banditx.cc.cd/en/docs/metrics</id>
-    <updated>2026-10-16T15:18:26.023Z</updated>
+    <updated>2026-10-16T15:26:13.232Z</updated>
     <summary>Prometheus, ready-made dashboards, structured logs, alerts.</summary>
     <author><name>NormikChel</name></author>
     <category term="en"/>
@@ -187,7 +187,7 @@
     <title>Routing — banditx — banditx</title>
     <link href="https://banditx.cc.cd/en/docs/routing"/>
     <id>https://banditx.cc.cd/en/docs/routing</id>
-    <updated>2026-10-16T15:18:26.023Z</updated>
+    <updated>2026-10-16T15:26:13.232Z</updated>
     <summary>Host, path, regex, headers, priorities, redirect and rewrite — with examples.</summary>
     <author><name>NormikChel</name></author>
     <category term="en"/>
@@ -196,7 +196,7 @@
     <title>TLS / ACME — banditx — banditx</title>
     <link href="https://banditx.cc.cd/en/docs/tls"/>
     <id>https://banditx.cc.cd/en/docs/tls</id>
-    <updated>2026-10-16T15:18:26.023Z</updated>
+    <updated>2026-10-16T15:26:13.232Z</updated>
     <summary>BYO certs, Let&apos;s Encrypt built-in, SNI, mTLS, HSTS.</summary>
     <author><name>NormikChel</name></author>
     <category term="en"/>
@@ -205,7 +205,7 @@
     <title>Docs — banditx — banditx</title>
     <link href="https://banditx.cc.cd/en/docs"/>
     <id>https://banditx.cc.cd/en/docs</id>
-    <updated>2026-10-16T15:18:26.023Z</updated>
+    <updated>2026-10-16T15:26:13.232Z</updated>
     <summary>HTTP/1.1, HTTP/2, FastCGI. Reverse proxy, load balancer, health checks, Prometheus metrics — a single binary with no dependencies.</summary>
     <author><name>NormikChel</name></author>
     <category term="en"/>
@@ -214,7 +214,7 @@
     <title>Features — banditx — banditx</title>
     <link href="https://banditx.cc.cd/en/features"/>
     <id>https://banditx.cc.cd/en/features</id>
-    <updated>2026-10-16T15:18:26.023Z</updated>
+    <updated>2026-10-16T15:26:13.232Z</updated>
     <summary>HTTP/1.1, HTTP/2, FastCGI, WebSocket, load balancing, TLS, metrics.</summary>
     <author><name>NormikChel</name></author>
     <category term="en"/>
@@ -223,7 +223,7 @@
     <title>Sitemap — banditx — banditx</title>
     <link href="https://banditx.cc.cd/en/sitemap"/>
     <id>https://banditx.cc.cd/en/sitemap</id>
-    <updated>2026-10-16T15:18:26.023Z</updated>
+    <updated>2026-10-16T15:26:13.232Z</updated>
     <summary>Every section of the banditx site: overview, features, benchmarks, comparison with nginx and docs.</summary>
     <author><name>NormikChel</name></author>
     <category term="en"/>
@@ -232,7 +232,7 @@
     <title>banditx — fast reverse proxy in Rust</title>
     <link href="https://banditx.cc.cd/en"/>
     <id>https://banditx.cc.cd/en</id>
-    <updated>2026-10-16T15:18:26.023Z</updated>
+    <updated>2026-10-16T15:26:13.232Z</updated>
     <summary>HTTP/1.1, HTTP/2, FastCGI. Reverse proxy, load balancer, health checks, Prometheus metrics — a single binary with no dependencies.</summary>
     <author><name>NormikChel</name></author>
     <category term="en"/>
