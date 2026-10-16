@@ -1,7 +1,7 @@
-:HL["/_next/static/chunks/1iw4eb59xeufe.css","style"]
+:HL["/_next/static/chunks/0abgo56z6v_tq.css","style"]
 :HL["/_next/static/chunks/1rhofnb414w_t.css","style"]
 :HL["/_next/static/chunks/2x1hmm5czkg-b.css","style"]
 3:[["children",{"s":"__PAGE__","h":160}]]
 2:[["children",{"s":"compare","h":64,"c":"$Q3"}]]
 1:[["children",{"s":"(ru)","h":48,"c":"$Q2"}]]
-0:{"b":"Mk_MWeVlD_JFu6HYzKbya","t":{"t":{"s":"","h":80,"c":"$Q1"}}}
+0:{"b":"NvfAHZVnF6EOEg0CA-haY","t":{"t":{"s":"","h":80,"c":"$Q1"}}}
