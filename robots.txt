@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+Disallow: /404.html
+Disallow: /search-ru.json
+Disallow: /search-en.json
+
+Sitemap: https://banditx.cc.cd/sitemap.xml

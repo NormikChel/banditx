@@ -1,7 +1,7 @@
-:HL["/_next/static/chunks/2fccw0s34dm1v.css","style"]
+:HL["/_next/static/chunks/1gx8jjofdza9c.css","style"]
 :HL["/_next/static/chunks/1rhofnb414w_t.css","style"]
-:HL["/_next/static/chunks/2x1hmm5czkg-b.css","style"]
+:HL["/_next/static/chunks/1c3kj6e3wvlgv.css","style"]
 3:[["children",{"s":"__PAGE__","h":160}]]
 2:[["children",{"s":"docs","h":64,"c":"$Q3"}]]
 1:[["children",{"s":"(ru)","h":48,"c":"$Q2"}]]
-0:{"b":"cPtOrsYkijVjOlqn5mrqc","t":{"t":{"s":"","h":80,"c":"$Q1"}}}
+0:{"b":"Fegv7rxSwECYO_UVo4AGQ","t":{"t":{"s":"","h":80,"c":"$Q1"}}}

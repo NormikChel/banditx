@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>banditx — fast reverse proxy in Rust</title>
+    <link>https://banditx.cc.cd</link>
+    <description>HTTP/1.1, HTTP/2, FastCGI, WebSocket. Reverse proxy, load balancer, Prometheus metrics — one binary.</description>
+    <language>ru</language>
+    <lastBuildDate>Fri, 16 Oct 2026 15:10:50 GMT</lastBuildDate>
+    <generator>banditx</generator>
+    <atom:link href="https://banditx.cc.cd/rss.xml" rel="self" type="application/rss+xml"/>
+
+    <item>
+      <title>Бенчмарки — banditx — banditx</title>
+      <link>https://banditx.cc.cd/benchmarks</link>
+      <guid isPermaLink="true">https://banditx.cc.cd/benchmarks</guid>
+      <description>Сравнение производительности banditx, nginx, caddy и haproxy.</description>
+      <pubDate>Fri, 16 Oct 2026 15:10:50 GMT</pubDate>
+      <language>ru</language>
+    </item>
+    <item>
+      <title>Сравнение с nginx и caddy — banditx — banditx</title>
+      <link>https://banditx.cc.cd/compare</link>
+      <guid isPermaLink="true">https://banditx.cc.cd/compare</guid>
+      <description>HTTP/1.1, HTTP/2, FastCGI. Reverse proxy, балансировка, health checks, Prometheus-метрики — один бинарник без зависимостей.</description>
+      <pubDate>Fri, 16 Oct 2026 15:10:50 GMT</pubDate>
+      <language>ru</language>
+    </item>
+    <item>
+      <title>Балансировка — banditx — banditx</title>
+      <link>https://banditx.cc.cd/docs/balancing</link>
+      <guid isPermaLink="true">https://banditx.cc.cd/docs/balancing</guid>
+      <description>Стратегии, sticky sessions, health checks, circuit breaker, retries.</description>
+      <pubDate>Fri, 16 Oct 2026 15:10:50 GMT</pubDate>
+      <language>ru</language>
+    </item>
+    <item>
+      <title>Конфигурация — banditx — banditx</title>
+      <link>https://banditx.cc.cd/docs/configuration</link>
+      <guid isPermaLink="true">https://banditx.cc.cd/docs/configuration</guid>
+      <description>Один YAML-файл. Полная схема, все поля, примеры, переменные окружения.</description>
+      <pubDate>Fri, 16 Oct 2026 15:10:50 GMT</pubDate>
+      <language>ru</language>
+    </item>
+    <item>
+      <title>Установка — banditx — banditx</title>
+      <link>https://banditx.cc.cd/docs/installation</link>
+      <guid isPermaLink="true">https://banditx.cc.cd/docs/installation</guid>
+      <description>Как поставить banditx: бинарник, Docker, cargo, systemd. Займёт меньше минуты.</description>
+      <pubDate>Fri, 16 Oct 2026 15:10:50 GMT</pubDate>
+      <language>ru</language>
+    </item>
+    <item>
+      <title>Метрики и логи — banditx — banditx</title>
+      <link>https://banditx.cc.cd/docs/metrics</link>
+      <guid isPermaLink="true">https://banditx.cc.cd/docs/metrics</guid>
+      <description>Prometheus, готовые дашборды, структурные логи, алерты.</description>
+      <pubDate>Fri, 16 Oct 2026 15:10:50 GMT</pubDate>
+      <language>ru</language>
+    </item>
+    <item>
+      <title>Маршрутизация — banditx — banditx</title>
+      <link>https://banditx.cc.cd/docs/routing</link>
+      <guid isPermaLink="true">https://banditx.cc.cd/docs/routing</guid>
+      <description>Host, path, regex, headers, приоритеты, redirect и rewrite — с примерами.</description>
+      <pubDate>Fri, 16 Oct 2026 15:10:50 GMT</pubDate>
+      <language>ru</language>
+    </item>
+    <item>
+      <title>TLS / ACME — banditx — banditx</title>
+      <link>https://banditx.cc.cd/docs/tls</link>
+      <guid isPermaLink="true">https://banditx.cc.cd/docs/tls</guid>
+      <description>Свои сертификаты, Let&apos;s Encrypt из коробки, SNI, mTLS, HSTS.</description>
+      <pubDate>Fri, 16 Oct 2026 15:10:50 GMT</pubDate>
+      <language>ru</language>
+    </item>
+    <item>
+      <title>Документация — banditx — banditx</title>
+      <link>https://banditx.cc.cd/docs</link>
+      <guid isPermaLink="true">https://banditx.cc.cd/docs</guid>
+      <description>HTTP/1.1, HTTP/2, FastCGI. Reverse proxy, балансировка, health checks, Prometheus-метрики — один бинарник без зависимостей.</description>
+      <pubDate>Fri, 16 Oct 2026 15:10:50 GMT</pubDate>
+      <language>ru</language>
+    </item>
+    <item>
+      <title>Возможности — banditx — banditx</title>
+      <link>https://banditx.cc.cd/features</link>
+      <guid isPermaLink="true">https://banditx.cc.cd/features</guid>
+      <description>HTTP/1.1, HTTP/2, FastCGI, WebSocket, балансировка, TLS, метрики.</description>
+      <pubDate>Fri, 16 Oct 2026 15:10:50 GMT</pubDate>
+      <language>ru</language>
+    </item>
+    <item>
+      <title>banditx — быстрый reverse proxy на Rust</title>
+      <link>https://banditx.cc.cd/</link>
+      <guid isPermaLink="true">https://banditx.cc.cd/</guid>
+      <description>HTTP/1.1, HTTP/2, FastCGI. Reverse proxy, балансировка, health checks, Prometheus-метрики — один бинарник без зависимостей.</description>
+      <pubDate>Fri, 16 Oct 2026 15:10:50 GMT</pubDate>
+      <language>ru</language>
+    </item>
+    <item>
+      <title>banditx — быстрый reverse proxy на Rust</title>
+      <link>https://banditx.cc.cd/ru</link>
+      <guid isPermaLink="true">https://banditx.cc.cd/ru</guid>
+      <description>HTTP/1.1, HTTP/2, FastCGI. Reverse proxy, балансировка, health checks, Prometheus-метрики — один бинарник без зависимостей.</description>
+      <pubDate>Fri, 16 Oct 2026 15:10:50 GMT</pubDate>
+      <language>ru</language>
+    </item>
+    <item>
+      <title>Карта сайта — banditx — banditx</title>
+      <link>https://banditx.cc.cd/sitemap</link>
+      <guid isPermaLink="true">https://banditx.cc.cd/sitemap</guid>
+      <description>Все разделы сайта banditx: обзор, возможности, бенчмарки, сравнение с nginx и документация.</description>
+      <pubDate>Fri, 16 Oct 2026 15:10:50 GMT</pubDate>
+      <language>ru</language>
+    </item>
+    <item>
+      <title>Benchmarks — banditx — banditx</title>
+      <link>https://banditx.cc.cd/en/benchmarks</link>
+      <guid isPermaLink="true">https://banditx.cc.cd/en/benchmarks</guid>
+      <description>Performance comparison of banditx, nginx, caddy and haproxy.</description>
+      <pubDate>Fri, 16 Oct 2026 15:10:50 GMT</pubDate>
+      <language>en</language>
+    </item>
+    <item>
+      <title>Compare with nginx and caddy — banditx — banditx</title>
+      <link>https://banditx.cc.cd/en/compare</link>
+      <guid isPermaLink="true">https://banditx.cc.cd/en/compare</guid>
+      <description>HTTP/1.1, HTTP/2, FastCGI. Reverse proxy, load balancer, health checks, Prometheus metrics — a single binary with no dependencies.</description>
+      <pubDate>Fri, 16 Oct 2026 15:10:50 GMT</pubDate>
+      <language>en</language>
+    </item>
+    <item>
+      <title>Load balancing — banditx — banditx</title>
+      <link>https://banditx.cc.cd/en/docs/balancing</link>
+      <guid isPermaLink="true">https://banditx.cc.cd/en/docs/balancing</guid>
+      <description>Strategies, sticky sessions, health checks, circuit breaker, retries.</description>
+      <pubDate>Fri, 16 Oct 2026 15:10:50 GMT</pubDate>
+      <language>en</language>
+    </item>
+    <item>
+      <title>Configuration — banditx — banditx</title>
+      <link>https://banditx.cc.cd/en/docs/configuration</link>
+      <guid isPermaLink="true">https://banditx.cc.cd/en/docs/configuration</guid>
+      <description>A single YAML file. Full schema, every field, examples, env vars.</description>
+      <pubDate>Fri, 16 Oct 2026 15:10:50 GMT</pubDate>
+      <language>en</language>
+    </item>
+    <item>
+      <title>Installation — banditx — banditx</title>
+      <link>https://banditx.cc.cd/en/docs/installation</link>
+      <guid isPermaLink="true">https://banditx.cc.cd/en/docs/installation</guid>
+      <description>Install banditx: binary, Docker, cargo, systemd. Takes under a minute.</description>
+      <pubDate>Fri, 16 Oct 2026 15:10:50 GMT</pubDate>
+      <language>en</language>
+    </item>
+    <item>
+      <title>Metrics &amp; logs — banditx — banditx</title>
+      <link>https://banditx.cc.cd/en/docs/metrics</link>
+      <guid isPermaLink="true">https://banditx.cc.cd/en/docs/metrics</guid>
+      <description>Prometheus, ready-made dashboards, structured logs, alerts.</description>
+      <pubDate>Fri, 16 Oct 2026 15:10:50 GMT</pubDate>
+      <language>en</language>
+    </item>
+    <item>
+      <title>Routing — banditx — banditx</title>
+      <link>https://banditx.cc.cd/en/docs/routing</link>
+      <guid isPermaLink="true">https://banditx.cc.cd/en/docs/routing</guid>
+      <description>Host, path, regex, headers, priorities, redirect and rewrite — with examples.</description>
+      <pubDate>Fri, 16 Oct 2026 15:10:50 GMT</pubDate>
+      <language>en</language>
+    </item>
+    <item>
+      <title>TLS / ACME — banditx — banditx</title>
+      <link>https://banditx.cc.cd/en/docs/tls</link>
+      <guid isPermaLink="true">https://banditx.cc.cd/en/docs/tls</guid>
+      <description>BYO certs, Let&apos;s Encrypt built-in, SNI, mTLS, HSTS.</description>
+      <pubDate>Fri, 16 Oct 2026 15:10:50 GMT</pubDate>
+      <language>en</language>
+    </item>
+    <item>
+      <title>Docs — banditx — banditx</title>
+      <link>https://banditx.cc.cd/en/docs</link>
+      <guid isPermaLink="true">https://banditx.cc.cd/en/docs</guid>
+      <description>HTTP/1.1, HTTP/2, FastCGI. Reverse proxy, load balancer, health checks, Prometheus metrics — a single binary with no dependencies.</description>
+      <pubDate>Fri, 16 Oct 2026 15:10:50 GMT</pubDate>
+      <language>en</language>
+    </item>
+    <item>
+      <title>Features — banditx — banditx</title>
+      <link>https://banditx.cc.cd/en/features</link>
+      <guid isPermaLink="true">https://banditx.cc.cd/en/features</guid>
+      <description>HTTP/1.1, HTTP/2, FastCGI, WebSocket, load balancing, TLS, metrics.</description>
+      <pubDate>Fri, 16 Oct 2026 15:10:50 GMT</pubDate>
+      <language>en</language>
+    </item>
+    <item>
+      <title>Sitemap — banditx — banditx</title>
+      <link>https://banditx.cc.cd/en/sitemap</link>
+      <guid isPermaLink="true">https://banditx.cc.cd/en/sitemap</guid>
+      <description>Every section of the banditx site: overview, features, benchmarks, comparison with nginx and docs.</description>
+      <pubDate>Fri, 16 Oct 2026 15:10:50 GMT</pubDate>
+      <language>en</language>
+    </item>
+    <item>
+      <title>banditx — fast reverse proxy in Rust</title>
+      <link>https://banditx.cc.cd/en</link>
+      <guid isPermaLink="true">https://banditx.cc.cd/en</guid>
+      <description>HTTP/1.1, HTTP/2, FastCGI. Reverse proxy, load balancer, health checks, Prometheus metrics — a single binary with no dependencies.</description>
+      <pubDate>Fri, 16 Oct 2026 15:10:50 GMT</pubDate>
+      <language>en</language>
+    </item>
+  </channel>
+</rss>
