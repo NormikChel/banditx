@@ -2,7 +2,7 @@
 4:"/_next/static/chunks/0umf92h1sb77c.js"
 5:I[39756,["$4"],"default"]
 6:I[37457,["$4"],"default"]
-d:"/_next/static/chunks/39juzzig-erlq.js"
+d:"/_next/static/chunks/1w0ky-mjj2ekc.js"
 e:"/_next/static/chunks/24xu3yk_lxc5_.js"
 f:I[22016,["$d","$e"],""]
 10:I[45424,["$d","$e"],"default"]
@@ -20,7 +20,7 @@ c:[["children",{"s":"__PAGE__","h":160,"d":{"r":["$","$3","c",{"children":[["$",
 a:[["children",{"s":{"n":"slug","t":"d","k":"tls","s":[]},"h":96,"d":{"r":["$","$3","c",{"children":[null,["$","$L5",null,{"parallelRouterKey":"children","template":["$","$L6",null,{}]}]]}],"p":"$@b","v":"$8","s":"$9"},"c":"$Qc"}]]
 2:[["children",{"s":"docs","h":64,"d":{"r":["$","$3","c",{"children":[null,["$","$L5",null,{"parallelRouterKey":"children","template":["$","$L6",null,{}]}]]}],"p":"$@7","v":"$8","s":"$9"},"c":"$Qa"}]]
 1:[["children",{"s":"(ru)","h":48,"c":"$Q2"}]]
-0:{"t":{"t":{"s":"","h":80,"c":"$Q1"},"h":{"r":["$","$3","h",{"children":[null,["$","$L23",null,{"children":[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]}],["$","$L25",null,{"children":[["$","div",null,{"hidden":true,"children":["$","$26",null,{"name":"Next.Metadata","children":[["$","title","0",{"children":"TLS / ACME — banditx"}],["$","meta","1",{"name":"description","content":"Свои сертификаты, Let's Encrypt из коробки, SNI, mTLS, HSTS."}],["$","link","2",{"rel":"icon","href":"/favicon.ico?favicon.2jfd-zrjm7-b_.ico","sizes":"256x256","type":"image/x-icon"}],["$","link","3",{"rel":"icon","href":"/icon.png?icon.3lrvg4y_3ekd1.png","sizes":"512x512","type":"image/png"}],["$","link","4",{"rel":"icon","href":"/icon.svg?icon.1fp4uo_hzq74b.svg","sizes":"any","type":"image/svg+xml"}],["$","link","5",{"rel":"apple-touch-icon","href":"/apple-icon.png?apple-icon.1i3b4g0ft0dvc.png","sizes":"180x180","type":"image/png"}],["$","$L27","6",{}]]}]}],null]}],null]}],"p":"$@28","v":null,"s":"$9"}},"a":"$@29","u":"$@2a","b":"NvfAHZVnF6EOEg0CA-haY"}
+0:{"t":{"t":{"s":"","h":80,"c":"$Q1"},"h":{"r":["$","$3","h",{"children":[null,["$","$L23",null,{"children":[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]}],["$","$L25",null,{"children":[["$","div",null,{"hidden":true,"children":["$","$26",null,{"name":"Next.Metadata","children":[["$","title","0",{"children":"TLS / ACME — banditx"}],["$","meta","1",{"name":"description","content":"Свои сертификаты, Let's Encrypt из коробки, SNI, mTLS, HSTS."}],["$","link","2",{"rel":"icon","href":"/favicon.ico?favicon.2jfd-zrjm7-b_.ico","sizes":"256x256","type":"image/x-icon"}],["$","link","3",{"rel":"icon","href":"/icon.png?icon.3lrvg4y_3ekd1.png","sizes":"512x512","type":"image/png"}],["$","link","4",{"rel":"icon","href":"/icon.svg?icon.1fp4uo_hzq74b.svg","sizes":"any","type":"image/svg+xml"}],["$","link","5",{"rel":"apple-touch-icon","href":"/apple-icon.png?apple-icon.1i3b4g0ft0dvc.png","sizes":"180x180","type":"image/png"}],["$","$L27","6",{}]]}]}],null]}],null]}],"p":"$@28","v":null,"s":"$9"}},"a":"$@29","u":"$@2a","b":"b1yN0KnzsKU8Em7DICtGY"}
 2b:I[97367,["$4"],"OutletBoundary"]
 :HL["/_next/static/chunks/42z0rcm8ol4zk.css","style"]
 12:["$","h2","8",{"id":"sni","className":"_doMJW_h2","children":[["$","a",null,{"href":"#sni","className":"_doMJW_anchor","aria-hidden":true,"tabIndex":-1,"children":"#"}],"SNI и несколько доменов"]}]
