@@ -2,7 +2,7 @@
 4:"/_next/static/chunks/0umf92h1sb77c.js"
 5:I[39756,["$4"],"default"]
 6:I[37457,["$4"],"default"]
-d:"/_next/static/chunks/0j4_vap1i7j2f.js"
+d:"/_next/static/chunks/3n6-3ew-s3vcx.js"
 e:"/_next/static/chunks/24xu3yk_lxc5_.js"
 f:I[22016,["$d","$e"],""]
 10:I[45424,["$d","$e"],"default"]
@@ -20,7 +20,7 @@ c:[["children",{"s":"__PAGE__","h":160,"d":{"r":["$","$3","c",{"children":[["$",
 a:[["children",{"s":{"n":"slug","t":"d","k":"metrics","s":[]},"h":96,"d":{"r":["$","$3","c",{"children":[null,["$","$L5",null,{"parallelRouterKey":"children","template":["$","$L6",null,{}]}]]}],"p":"$@b","v":"$8","s":"$9"},"c":"$Qc"}]]
 2:[["children",{"s":"docs","h":64,"d":{"r":["$","$3","c",{"children":[null,["$","$L5",null,{"parallelRouterKey":"children","template":["$","$L6",null,{}]}]]}],"p":"$@7","v":"$8","s":"$9"},"c":"$Qa"}]]
 1:[["children",{"s":"(ru)","h":48,"c":"$Q2"}]]
-0:{"t":{"t":{"s":"","h":80,"c":"$Q1"},"h":{"r":["$","$3","h",{"children":[null,["$","$L30",null,{"children":[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]}],["$","$L32",null,{"children":[["$","div",null,{"hidden":true,"children":["$","$33",null,{"name":"Next.Metadata","children":[["$","title","0",{"children":"Метрики и логи — banditx"}],["$","meta","1",{"name":"description","content":"Prometheus, готовые дашборды, структурные логи, алерты."}],["$","link","2",{"rel":"icon","href":"/favicon.ico?favicon.2jfd-zrjm7-b_.ico","sizes":"256x256","type":"image/x-icon"}],["$","link","3",{"rel":"icon","href":"/icon.png?icon.3lrvg4y_3ekd1.png","sizes":"512x512","type":"image/png"}],["$","link","4",{"rel":"icon","href":"/icon.svg?icon.1fp4uo_hzq74b.svg","sizes":"any","type":"image/svg+xml"}],["$","link","5",{"rel":"apple-touch-icon","href":"/apple-icon.png?apple-icon.1i3b4g0ft0dvc.png","sizes":"180x180","type":"image/png"}],["$","$L34","6",{}]]}]}],null]}],null]}],"p":"$@35","v":null,"s":"$9"}},"a":"$@36","u":"$@37","b":"1MzY2CT_mZwPtemw07x5h"}
+0:{"t":{"t":{"s":"","h":80,"c":"$Q1"},"h":{"r":["$","$3","h",{"children":[null,["$","$L30",null,{"children":[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]}],["$","$L32",null,{"children":[["$","div",null,{"hidden":true,"children":["$","$33",null,{"name":"Next.Metadata","children":[["$","title","0",{"children":"Метрики и логи — banditx"}],["$","meta","1",{"name":"description","content":"Prometheus, готовые дашборды, структурные логи, алерты."}],["$","link","2",{"rel":"icon","href":"/favicon.ico?favicon.2jfd-zrjm7-b_.ico","sizes":"256x256","type":"image/x-icon"}],["$","link","3",{"rel":"icon","href":"/icon.png?icon.3lrvg4y_3ekd1.png","sizes":"512x512","type":"image/png"}],["$","link","4",{"rel":"icon","href":"/icon.svg?icon.1fp4uo_hzq74b.svg","sizes":"any","type":"image/svg+xml"}],["$","link","5",{"rel":"apple-touch-icon","href":"/apple-icon.png?apple-icon.1i3b4g0ft0dvc.png","sizes":"180x180","type":"image/png"}],["$","$L34","6",{}]]}]}],null]}],null]}],"p":"$@35","v":null,"s":"$9"}},"a":"$@36","u":"$@37","b":"wYgjwniXarzsJd_1_0j0M"}
 38:I[97367,["$4"],"OutletBoundary"]
 :HL["/_next/static/chunks/42z0rcm8ol4zk.css","style"]
 12:["$","td","1",{"children":["gauge"]}]

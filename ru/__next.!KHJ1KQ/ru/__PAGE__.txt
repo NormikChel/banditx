@@ -3,7 +3,7 @@
 5:I[39756,["$4"],"default"]
 6:I[37457,["$4"],"default"]
 b:I[47257,["$4"],"ClientPageRoot"]
-c:"/_next/static/chunks/0j4_vap1i7j2f.js"
+c:"/_next/static/chunks/3n6-3ew-s3vcx.js"
 d:"/_next/static/chunks/2yugtofcu5x7z.js"
 e:I[8627,["$c","$d"],"default"]
 11:I[97367,["$4"],"OutletBoundary"]
@@ -19,7 +19,7 @@ e:I[8627,["$c","$d"],"default"]
 a:[["children",{"s":"__PAGE__","h":160,"d":{"r":["$","$3","c",{"children":[["$","$Lb",null,{"Component":"$e","serverProvidedParams":{"searchParams":{},"params":{},"promises":["$@f","$@10"]}}],[["$","script","script-0",{"src":"/_next/static/chunks/2yugtofcu5x7z.js","async":true}]],["$","$L11",null,{"children":["$","$12",null,{"name":"Next.MetadataOutlet","children":"$@13"}]}]]}],"p":"$@14","v":null,"s":"$9"}}]]
 2:[["children",{"s":"ru","h":64,"d":{"r":["$","$3","c",{"children":[null,["$","$L5",null,{"parallelRouterKey":"children","template":["$","$L6",null,{}]}]]}],"p":"$@7","v":"$8","s":"$9"},"c":"$Qa"}]]
 1:[["children",{"s":"(ru)","h":48,"c":"$Q2"}]]
-0:{"t":{"t":{"s":"","h":80,"c":"$Q1"},"h":{"r":["$","$3","h",{"children":[null,["$","$L16",null,{"children":[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]}],["$","$L18",null,{"children":[["$","div",null,{"hidden":true,"children":["$","$12",null,{"name":"Next.Metadata","children":[["$","title","0",{"children":"banditx — быстрый reverse proxy на Rust"}],["$","meta","1",{"name":"description","content":"HTTP/1.1, HTTP/2, FastCGI. Reverse proxy, балансировка, health checks, Prometheus-метрики — один бинарник без зависимостей."}],["$","link","2",{"rel":"icon","href":"/favicon.ico?favicon.2jfd-zrjm7-b_.ico","sizes":"256x256","type":"image/x-icon"}],["$","link","3",{"rel":"icon","href":"/icon.png?icon.3lrvg4y_3ekd1.png","sizes":"512x512","type":"image/png"}],["$","link","4",{"rel":"icon","href":"/icon.svg?icon.1fp4uo_hzq74b.svg","sizes":"any","type":"image/svg+xml"}],["$","link","5",{"rel":"apple-touch-icon","href":"/apple-icon.png?apple-icon.1i3b4g0ft0dvc.png","sizes":"180x180","type":"image/png"}],["$","$L19","6",{}]]}]}],null]}],null]}],"p":"$@1a","v":null,"s":"$9"}},"a":"$@1b","u":"$@1c","b":"1MzY2CT_mZwPtemw07x5h"}
+0:{"t":{"t":{"s":"","h":80,"c":"$Q1"},"h":{"r":["$","$3","h",{"children":[null,["$","$L16",null,{"children":[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]}],["$","$L18",null,{"children":[["$","div",null,{"hidden":true,"children":["$","$12",null,{"name":"Next.Metadata","children":[["$","title","0",{"children":"banditx — быстрый reverse proxy на Rust"}],["$","meta","1",{"name":"description","content":"HTTP/1.1, HTTP/2, FastCGI. Reverse proxy, балансировка, health checks, Prometheus-метрики — один бинарник без зависимостей."}],["$","link","2",{"rel":"icon","href":"/favicon.ico?favicon.2jfd-zrjm7-b_.ico","sizes":"256x256","type":"image/x-icon"}],["$","link","3",{"rel":"icon","href":"/icon.png?icon.3lrvg4y_3ekd1.png","sizes":"512x512","type":"image/png"}],["$","link","4",{"rel":"icon","href":"/icon.svg?icon.1fp4uo_hzq74b.svg","sizes":"any","type":"image/svg+xml"}],["$","link","5",{"rel":"apple-touch-icon","href":"/apple-icon.png?apple-icon.1i3b4g0ft0dvc.png","sizes":"180x180","type":"image/png"}],["$","$L19","6",{}]]}]}],null]}],null]}],"p":"$@1a","v":null,"s":"$9"}},"a":"$@1b","u":"$@1c","b":"wYgjwniXarzsJd_1_0j0M"}
 f:{}
 10:"$a:0:1:d:r:props:children:0:props:serverProvidedParams:params"
 13:null
