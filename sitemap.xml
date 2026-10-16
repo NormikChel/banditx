@@ -2,151 +2,151 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://banditx.cc.cd/</loc>
-    <lastmod>2026-10-16T16:43:20.124Z</lastmod>
+    <lastmod>2026-10-16T16:48:33.119Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/benchmarks</loc>
-    <lastmod>2026-10-16T16:43:20.728Z</lastmod>
+    <lastmod>2026-10-16T16:48:33.813Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/compare</loc>
-    <lastmod>2026-10-16T16:43:20.730Z</lastmod>
+    <lastmod>2026-10-16T16:48:33.835Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/docs</loc>
-    <lastmod>2026-10-16T16:43:20.214Z</lastmod>
+    <lastmod>2026-10-16T16:48:33.214Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/docs/balancing</loc>
-    <lastmod>2026-10-16T16:43:20.234Z</lastmod>
+    <lastmod>2026-10-16T16:48:33.254Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/docs/configuration</loc>
-    <lastmod>2026-10-16T16:43:20.935Z</lastmod>
+    <lastmod>2026-10-16T16:48:34.010Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/docs/installation</loc>
-    <lastmod>2026-10-16T16:43:20.931Z</lastmod>
+    <lastmod>2026-10-16T16:48:34.011Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/docs/metrics</loc>
-    <lastmod>2026-10-16T16:43:20.234Z</lastmod>
+    <lastmod>2026-10-16T16:48:33.254Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/docs/routing</loc>
-    <lastmod>2026-10-16T16:43:20.227Z</lastmod>
+    <lastmod>2026-10-16T16:48:33.242Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/docs/tls</loc>
-    <lastmod>2026-10-16T16:43:20.233Z</lastmod>
+    <lastmod>2026-10-16T16:48:33.248Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/en</loc>
-    <lastmod>2026-10-16T16:43:20.726Z</lastmod>
+    <lastmod>2026-10-16T16:48:33.789Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/en/benchmarks</loc>
-    <lastmod>2026-10-16T16:43:20.173Z</lastmod>
+    <lastmod>2026-10-16T16:48:33.132Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/en/compare</loc>
-    <lastmod>2026-10-16T16:43:20.185Z</lastmod>
+    <lastmod>2026-10-16T16:48:33.143Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/en/docs</loc>
-    <lastmod>2026-10-16T16:43:20.785Z</lastmod>
+    <lastmod>2026-10-16T16:48:33.855Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/en/docs/balancing</loc>
-    <lastmod>2026-10-16T16:43:20.803Z</lastmod>
+    <lastmod>2026-10-16T16:48:33.870Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/en/docs/configuration</loc>
-    <lastmod>2026-10-16T16:43:20.244Z</lastmod>
+    <lastmod>2026-10-16T16:48:33.182Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/en/docs/installation</loc>
-    <lastmod>2026-10-16T16:43:20.237Z</lastmod>
+    <lastmod>2026-10-16T16:48:33.178Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/en/docs/metrics</loc>
-    <lastmod>2026-10-16T16:43:20.803Z</lastmod>
+    <lastmod>2026-10-16T16:48:33.870Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/en/docs/routing</loc>
-    <lastmod>2026-10-16T16:43:20.248Z</lastmod>
+    <lastmod>2026-10-16T16:48:33.183Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/en/docs/tls</loc>
-    <lastmod>2026-10-16T16:43:20.244Z</lastmod>
+    <lastmod>2026-10-16T16:48:33.185Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/en/features</loc>
-    <lastmod>2026-10-16T16:43:20.788Z</lastmod>
+    <lastmod>2026-10-16T16:48:33.853Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/en/sitemap</loc>
-    <lastmod>2026-10-16T16:43:20.788Z</lastmod>
+    <lastmod>2026-10-16T16:48:33.854Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/features</loc>
-    <lastmod>2026-10-16T16:43:20.214Z</lastmod>
+    <lastmod>2026-10-16T16:48:33.215Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/ru</loc>
-    <lastmod>2026-10-16T16:43:20.214Z</lastmod>
+    <lastmod>2026-10-16T16:48:33.227Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/sitemap</loc>
-    <lastmod>2026-10-16T16:43:21.030Z</lastmod>
+    <lastmod>2026-10-16T16:48:34.171Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.4</priority>
   </url>
