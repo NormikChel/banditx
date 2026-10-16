@@ -1,8 +1,8 @@
-User-agent: *
+User-Agent: *
 Allow: /
-
-Disallow: /404.html
+Disallow: /_next/
 Disallow: /search-ru.json
 Disallow: /search-en.json
 
+Host: https://banditx.cc.cd
 Sitemap: https://banditx.cc.cd/sitemap.xml

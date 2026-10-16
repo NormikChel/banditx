@@ -1,238 +1,153 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://banditx.cc.cd/</loc>
-    <lastmod>2026-10-16T15:10:50.924Z</lastmod>
+    <lastmod>2026-10-16T15:18:22.510Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
-    <xhtml:link rel="alternate" hreflang="ru-RU" href="https://banditx.cc.cd/"/>
-    <xhtml:link rel="alternate" hreflang="en-US" href="https://banditx.cc.cd/en"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://banditx.cc.cd/"/>
-  </url>
-  <url>
-    <loc>https://banditx.cc.cd/_not-found</loc>
-    <lastmod>2026-10-16T15:10:50.924Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <xhtml:link rel="alternate" hreflang="ru-RU" href="https://banditx.cc.cd/_not-found"/>
-    <xhtml:link rel="alternate" hreflang="en-US" href="https://banditx.cc.cd/en/_not-found"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://banditx.cc.cd/_not-found"/>
   </url>
   <url>
     <loc>https://banditx.cc.cd/benchmarks</loc>
-    <lastmod>2026-10-16T15:10:50.924Z</lastmod>
+    <lastmod>2026-10-16T15:18:23.263Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
-    <xhtml:link rel="alternate" hreflang="ru-RU" href="https://banditx.cc.cd/benchmarks"/>
-    <xhtml:link rel="alternate" hreflang="en-US" href="https://banditx.cc.cd/en/benchmarks"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://banditx.cc.cd/benchmarks"/>
   </url>
   <url>
     <loc>https://banditx.cc.cd/compare</loc>
-    <lastmod>2026-10-16T15:10:50.924Z</lastmod>
+    <lastmod>2026-10-16T15:18:23.223Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
-    <xhtml:link rel="alternate" hreflang="ru-RU" href="https://banditx.cc.cd/compare"/>
-    <xhtml:link rel="alternate" hreflang="en-US" href="https://banditx.cc.cd/en/compare"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://banditx.cc.cd/compare"/>
   </url>
   <url>
     <loc>https://banditx.cc.cd/docs</loc>
-    <lastmod>2026-10-16T15:10:50.924Z</lastmod>
+    <lastmod>2026-10-16T15:18:22.620Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
-    <xhtml:link rel="alternate" hreflang="ru-RU" href="https://banditx.cc.cd/docs"/>
-    <xhtml:link rel="alternate" hreflang="en-US" href="https://banditx.cc.cd/en/docs"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://banditx.cc.cd/docs"/>
   </url>
   <url>
     <loc>https://banditx.cc.cd/docs/balancing</loc>
-    <lastmod>2026-10-16T15:10:50.924Z</lastmod>
+    <lastmod>2026-10-16T15:18:22.681Z</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <xhtml:link rel="alternate" hreflang="ru-RU" href="https://banditx.cc.cd/docs/balancing"/>
-    <xhtml:link rel="alternate" hreflang="en-US" href="https://banditx.cc.cd/en/docs/balancing"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://banditx.cc.cd/docs/balancing"/>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/docs/configuration</loc>
-    <lastmod>2026-10-16T15:10:50.924Z</lastmod>
+    <lastmod>2026-10-16T15:18:23.501Z</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <xhtml:link rel="alternate" hreflang="ru-RU" href="https://banditx.cc.cd/docs/configuration"/>
-    <xhtml:link rel="alternate" hreflang="en-US" href="https://banditx.cc.cd/en/docs/configuration"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://banditx.cc.cd/docs/configuration"/>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/docs/installation</loc>
-    <lastmod>2026-10-16T15:10:50.924Z</lastmod>
+    <lastmod>2026-10-16T15:18:23.497Z</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <xhtml:link rel="alternate" hreflang="ru-RU" href="https://banditx.cc.cd/docs/installation"/>
-    <xhtml:link rel="alternate" hreflang="en-US" href="https://banditx.cc.cd/en/docs/installation"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://banditx.cc.cd/docs/installation"/>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/docs/metrics</loc>
-    <lastmod>2026-10-16T15:10:50.924Z</lastmod>
+    <lastmod>2026-10-16T15:18:22.682Z</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <xhtml:link rel="alternate" hreflang="ru-RU" href="https://banditx.cc.cd/docs/metrics"/>
-    <xhtml:link rel="alternate" hreflang="en-US" href="https://banditx.cc.cd/en/docs/metrics"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://banditx.cc.cd/docs/metrics"/>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/docs/routing</loc>
-    <lastmod>2026-10-16T15:10:50.924Z</lastmod>
+    <lastmod>2026-10-16T15:18:22.667Z</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <xhtml:link rel="alternate" hreflang="ru-RU" href="https://banditx.cc.cd/docs/routing"/>
-    <xhtml:link rel="alternate" hreflang="en-US" href="https://banditx.cc.cd/en/docs/routing"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://banditx.cc.cd/docs/routing"/>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/docs/tls</loc>
-    <lastmod>2026-10-16T15:10:50.924Z</lastmod>
+    <lastmod>2026-10-16T15:18:22.681Z</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <xhtml:link rel="alternate" hreflang="ru-RU" href="https://banditx.cc.cd/docs/tls"/>
-    <xhtml:link rel="alternate" hreflang="en-US" href="https://banditx.cc.cd/en/docs/tls"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://banditx.cc.cd/docs/tls"/>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/en</loc>
-    <lastmod>2026-10-16T15:10:50.924Z</lastmod>
+    <lastmod>2026-10-16T15:18:23.213Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
-    <xhtml:link rel="alternate" hreflang="ru-RU" href="https://banditx.cc.cd/"/>
-    <xhtml:link rel="alternate" hreflang="en-US" href="https://banditx.cc.cd/en"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://banditx.cc.cd/"/>
   </url>
   <url>
     <loc>https://banditx.cc.cd/en/benchmarks</loc>
-    <lastmod>2026-10-16T15:10:50.924Z</lastmod>
+    <lastmod>2026-10-16T15:18:22.591Z</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ru-RU" href="https://banditx.cc.cd/benchmarks"/>
-    <xhtml:link rel="alternate" hreflang="en-US" href="https://banditx.cc.cd/en/benchmarks"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://banditx.cc.cd/benchmarks"/>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/en/compare</loc>
-    <lastmod>2026-10-16T15:10:50.924Z</lastmod>
+    <lastmod>2026-10-16T15:18:22.616Z</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ru-RU" href="https://banditx.cc.cd/compare"/>
-    <xhtml:link rel="alternate" hreflang="en-US" href="https://banditx.cc.cd/en/compare"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://banditx.cc.cd/compare"/>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/en/docs</loc>
-    <lastmod>2026-10-16T15:10:50.924Z</lastmod>
+    <lastmod>2026-10-16T15:18:23.307Z</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ru-RU" href="https://banditx.cc.cd/docs"/>
-    <xhtml:link rel="alternate" hreflang="en-US" href="https://banditx.cc.cd/en/docs"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://banditx.cc.cd/docs"/>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/en/docs/balancing</loc>
-    <lastmod>2026-10-16T15:10:50.924Z</lastmod>
+    <lastmod>2026-10-16T15:18:23.350Z</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ru-RU" href="https://banditx.cc.cd/docs/balancing"/>
-    <xhtml:link rel="alternate" hreflang="en-US" href="https://banditx.cc.cd/en/docs/balancing"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://banditx.cc.cd/docs/balancing"/>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/en/docs/configuration</loc>
-    <lastmod>2026-10-16T15:10:50.924Z</lastmod>
+    <lastmod>2026-10-16T15:18:22.647Z</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ru-RU" href="https://banditx.cc.cd/docs/configuration"/>
-    <xhtml:link rel="alternate" hreflang="en-US" href="https://banditx.cc.cd/en/docs/configuration"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://banditx.cc.cd/docs/configuration"/>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/en/docs/installation</loc>
-    <lastmod>2026-10-16T15:10:50.924Z</lastmod>
+    <lastmod>2026-10-16T15:18:22.646Z</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ru-RU" href="https://banditx.cc.cd/docs/installation"/>
-    <xhtml:link rel="alternate" hreflang="en-US" href="https://banditx.cc.cd/en/docs/installation"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://banditx.cc.cd/docs/installation"/>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/en/docs/metrics</loc>
-    <lastmod>2026-10-16T15:10:50.924Z</lastmod>
+    <lastmod>2026-10-16T15:18:23.349Z</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ru-RU" href="https://banditx.cc.cd/docs/metrics"/>
-    <xhtml:link rel="alternate" hreflang="en-US" href="https://banditx.cc.cd/en/docs/metrics"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://banditx.cc.cd/docs/metrics"/>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/en/docs/routing</loc>
-    <lastmod>2026-10-16T15:10:50.924Z</lastmod>
+    <lastmod>2026-10-16T15:18:22.648Z</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ru-RU" href="https://banditx.cc.cd/docs/routing"/>
-    <xhtml:link rel="alternate" hreflang="en-US" href="https://banditx.cc.cd/en/docs/routing"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://banditx.cc.cd/docs/routing"/>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/en/docs/tls</loc>
-    <lastmod>2026-10-16T15:10:50.924Z</lastmod>
+    <lastmod>2026-10-16T15:18:22.648Z</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ru-RU" href="https://banditx.cc.cd/docs/tls"/>
-    <xhtml:link rel="alternate" hreflang="en-US" href="https://banditx.cc.cd/en/docs/tls"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://banditx.cc.cd/docs/tls"/>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/en/features</loc>
-    <lastmod>2026-10-16T15:10:50.924Z</lastmod>
+    <lastmod>2026-10-16T15:18:23.308Z</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ru-RU" href="https://banditx.cc.cd/features"/>
-    <xhtml:link rel="alternate" hreflang="en-US" href="https://banditx.cc.cd/en/features"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://banditx.cc.cd/features"/>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/en/sitemap</loc>
-    <lastmod>2026-10-16T15:10:50.924Z</lastmod>
+    <lastmod>2026-10-16T15:18:23.309Z</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ru-RU" href="https://banditx.cc.cd/sitemap"/>
-    <xhtml:link rel="alternate" hreflang="en-US" href="https://banditx.cc.cd/en/sitemap"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://banditx.cc.cd/sitemap"/>
+    <priority>0.4</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/features</loc>
-    <lastmod>2026-10-16T15:10:50.924Z</lastmod>
+    <lastmod>2026-10-16T15:18:22.621Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
-    <xhtml:link rel="alternate" hreflang="ru-RU" href="https://banditx.cc.cd/features"/>
-    <xhtml:link rel="alternate" hreflang="en-US" href="https://banditx.cc.cd/en/features"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://banditx.cc.cd/features"/>
   </url>
   <url>
     <loc>https://banditx.cc.cd/ru</loc>
-    <lastmod>2026-10-16T15:10:50.924Z</lastmod>
+    <lastmod>2026-10-16T15:18:22.622Z</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <xhtml:link rel="alternate" hreflang="ru-RU" href="https://banditx.cc.cd/ru"/>
-    <xhtml:link rel="alternate" hreflang="en-US" href="https://banditx.cc.cd/en/ru"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://banditx.cc.cd/ru"/>
+    <priority>0.4</priority>
   </url>
   <url>
     <loc>https://banditx.cc.cd/sitemap</loc>
-    <lastmod>2026-10-16T15:10:50.924Z</lastmod>
+    <lastmod>2026-10-16T15:18:23.611Z</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <xhtml:link rel="alternate" hreflang="ru-RU" href="https://banditx.cc.cd/sitemap"/>
-    <xhtml:link rel="alternate" hreflang="en-US" href="https://banditx.cc.cd/en/sitemap"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://banditx.cc.cd/sitemap"/>
+    <priority>0.4</priority>
   </url>
 </urlset>
